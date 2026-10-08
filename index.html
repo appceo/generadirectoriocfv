@@ -27,7 +27,7 @@
     .header-banner {
       background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
       color: white;
-      padding: 2rem 0;
+      padding: 1.8rem 0;
       margin-bottom: 2rem;
       border-bottom: 4px solid #ecc94b;
     }
@@ -36,6 +36,9 @@
       border: none;
       border-radius: 10px;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+    .group-card {
       transition: transform 0.2s, box-shadow 0.2s;
     }
 
@@ -49,12 +52,17 @@
       font-size: 0.85rem;
     }
 
-    /* Estilos exclusivos para la vista de Impresión / PDF */
+    .info-label {
+      font-weight: 600;
+      color: #4a5568;
+    }
+
+    /* Estilos de Impresión */
     @media print {
       body {
         background-color: white !important;
         color: black !important;
-        font-size: 11pt;
+        font-size: 10pt;
       }
 
       .no-print {
@@ -77,9 +85,9 @@
 
       .table-print th, .table-print td {
         border: 1px solid #cbd5e0;
-        padding: 6px 10px;
+        padding: 6px 8px;
         text-align: left;
-        font-size: 10pt;
+        font-size: 9pt;
       }
 
       .table-print th {
@@ -90,9 +98,9 @@
 
       .print-header {
         text-align: center;
-        margin-bottom: 20px;
+        margin-bottom: 15px;
         border-bottom: 2px solid #2b6cb0;
-        padding-bottom: 10px;
+        padding-bottom: 8px;
       }
     }
 
@@ -103,26 +111,26 @@
 </head>
 <body>
 
-  <!-- ENCABEZADO PRINCIPAL (Pantalla) -->
+  <!-- ENCABEZADO -->
   <header class="header-banner no-print">
     <div class="container text-center">
-      <h1 class="fw-bold"><i class="bi bi-people-fill me-2"></i>Directorio de Grupos CFV</h1>
-      <p class="lead mb-0">Sistema de Consulta y Gestión de Datos de Grupos Familiares</p>
+      <h1 class="fw-bold mb-1"><i class="bi bi-people-fill me-2"></i>Directorio de Grupos CFV</h1>
+      <p class="lead mb-0 fs-6" id="headerSubtitle">Consulta e Informe Completo de Grupos Familiares</p>
     </div>
   </header>
 
   <div class="container mb-5">
 
-    <!-- SECCIÓN DE CARGA Y HERRAMIENTAS (no-print) -->
-    <div class="row g-3 mb-4 no-print">
-      <!-- Cargar Archivo -->
-      <div class="col-md-7">
+    <!-- SECCIÓN DE OPCIONES Y CARGA (ADMIN - Oculto si se accede por link público) -->
+    <div id="adminPanel" class="row g-3 mb-4 no-print">
+      <!-- Cargar Excel -->
+      <div class="col-md-4">
         <div class="card card-custom p-3 h-100">
-          <h5 class="card-title text-primary"><i class="bi bi-file-earmark-spreadsheet me-2"></i>Actualizar Datos</h5>
-          <p class="text-muted small mb-2">Adjunte el archivo Excel (.xlsx) con los datos del directorio de grupos.</p>
+          <h5 class="card-title text-primary"><i class="bi bi-file-earmark-spreadsheet me-2"></i>Actualizar Base de Datos</h5>
+          <p class="text-muted small mb-2">Adjunte el archivo de Excel (.xlsx) actualizado.</p>
           <div class="input-group">
             <input type="file" id="excelFile" class="form-control" accept=".xlsx, .xls, .csv">
-            <button class="btn btn-outline-danger" type="button" id="btnClearData" title="Borrar datos almacenados">
+            <button class="btn btn-outline-danger" type="button" id="btnClearData" title="Borrar datos guardados">
               <i class="bi bi-trash"></i>
             </button>
           </div>
@@ -130,26 +138,39 @@
         </div>
       </div>
 
-      <!-- Acciones de Impresión -->
-      <div class="col-md-5">
+      <!-- Generar Link Público -->
+      <div class="col-md-4">
         <div class="card card-custom p-3 h-100 d-flex flex-column justify-content-between">
           <div>
-            <h5 class="card-title text-primary"><i class="bi bi-printer me-2"></i>Informes e Impresión</h5>
-            <p class="text-muted small mb-2">Genere un reporte imprimible profesional o PDF parcial/completo.</p>
+            <h5 class="card-title text-primary"><i class="bi bi-link-45deg me-2"></i>Generar Link Público</h5>
+            <p class="text-muted small mb-2">Cree un enlace compartible con uno o varios tipos de grupo elegidos.</p>
+          </div>
+          <button class="btn btn-outline-primary w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#shareModal">
+            <i class="bi bi-share-fill me-2"></i> Configurar Enlace Público
+          </button>
+        </div>
+      </div>
+
+      <!-- Imprimir Reporte -->
+      <div class="col-md-4">
+        <div class="card card-custom p-3 h-100 d-flex flex-column justify-content-between">
+          <div>
+            <h5 class="card-title text-primary"><i class="bi bi-printer me-2"></i>Generar Imprimible / PDF</h5>
+            <p class="text-muted small mb-2">Exporte un informe profesional completo o filtrado por tipo de grupo.</p>
           </div>
           <button class="btn btn-success w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#printModal">
-            <i class="bi bi-file-pdf me-2"></i> Configurar Imprimible
+            <i class="bi bi-file-pdf me-2"></i> Configurar e Imprimir
           </button>
         </div>
       </div>
     </div>
 
-    <!-- SECCIÓN DE NAVEGACIÓN / VISTA PÚBLICA (no-print) -->
+    <!-- SECCIÓN DE FILTROS Y DESPLEGABLES -->
     <div class="card card-custom p-4 no-print">
       <div class="row g-3 align-items-center mb-4">
-        <div class="col-md-6">
+        <div class="col-md-6" id="selectContainer">
           <label for="tipoGrupoSelect" class="form-label fw-bold text-secondary">
-            <i class="bi bi-funnel me-1"></i> Seleccione el Tipo de Grupo:
+            <i class="bi bi-funnel-fill me-1"></i> Seleccione el Tipo de Grupo:
           </label>
           <select id="tipoGrupoSelect" class="form-select form-select-lg border-primary">
             <option value="CFV Pre-Juvenil">CFV Pre-Juvenil</option>
@@ -159,112 +180,147 @@
             <option value="CFV Mujeres">CFV Mujeres</option>
             <option value="CFV Parejas">CFV Parejas</option>
             <option value="CFV Integral" selected>CFV Integral</option>
+            <option value="CFV Kids">CFV Kids</option>
+            <option value="Red">Red</option>
+            <option value="Sub-Red">Sub-Red</option>
+            <option value="CAFE Discipulado">CAFE Discipulado</option>
+            <option value="Equipo de Pastores">Equipo de Pastores</option>
+            <option value="Iglecam">Iglecam</option>
           </select>
         </div>
         <div class="col-md-6">
           <label for="searchBox" class="form-label fw-bold text-secondary">
-            <i class="bi bi-search me-1"></i> Buscar por Nombre / Encargado:
+            <i class="bi bi-search me-1"></i> Filtrar dentro de la vista (Opcional):
           </label>
-          <input type="text" id="searchBox" class="form-control form-control-lg" placeholder="Filtrar resultados...">
+          <input type="text" id="searchBox" class="form-control form-control-lg" placeholder="Escriba aquí para buscar un grupo o encargado...">
         </div>
       </div>
 
-      <!-- Resumen de Contadores -->
+      <!-- Contadores -->
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h4 id="groupTitle" class="text-primary fw-bold mb-0">Listado de Grupos</h4>
         <span id="recordCounter" class="badge bg-secondary fs-6">0 Grupos encontrados</span>
       </div>
 
-      <!-- Tarjetas de Resultados Publicos -->
+      <!-- TARJETAS CON TODOS LOS DATOS -->
       <div id="publicDirectoryContainer" class="row g-3">
         <!-- Generado dinámicamente -->
       </div>
     </div>
 
-    <!-- VISTA EXCLUSIVA DE IMPRESIÓN (print-only) -->
-    <div id="printContainer" class="print-only">
-      <!-- Se llena dinámicamente con las tablas seleccionadas al momento de imprimir -->
-    </div>
+    <!-- VISTA EXCLUSIVA PARA IMPRESIÓN (PDF) -->
+    <div id="printContainer" class="print-only"></div>
 
   </div>
 
-  <!-- MODAL CONFIGURACIÓN DE IMPRESIÓN -->
-  <div class="modal fade no-print" id="printModal" tabindex="-1" aria-labelledby="printModalLabel" aria-hidden="true">
+  <!-- MODAL PARA GENERAR LINK PÚBLICO -->
+  <div class="modal fade no-print" id="shareModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header bg-primary text-white">
-          <h5 class="modal-title" id="printModalLabel"><i class="bi bi-printer me-2"></i>Opciones de Impresión / Exportación</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          <h5 class="modal-title"><i class="bi bi-share-fill me-2"></i>Generar Enlace Público Compartible</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <p class="fw-bold mb-2">Seleccione los tipos de grupo que desea incluir en el informe:</p>
-          
+          <p class="fw-bold mb-2">Seleccione los tipos de grupo que desea incluir en el enlace público:</p>
           <div class="form-check mb-2">
-            <input class="form-check-input" type="checkbox" id="checkAllGroups" checked>
-            <label class="form-check-label fw-bold" for="checkAllGroups">
-              -- Seleccionar Todos (Directorio Completo) --
-            </label>
+            <input class="form-check-input" type="checkbox" id="checkAllShare" checked>
+            <label class="form-check-label fw-bold" for="checkAllShare">-- Seleccionar Todos --</label>
           </div>
           <hr>
-          
+          <div id="shareGroupOptions">
+            <div class="form-check"><input class="form-check-input share-option" type="checkbox" value="CFV Pre-Juvenil" checked><label class="form-check-label">CFV Pre-Juvenil</label></div>
+            <div class="form-check"><input class="form-check-input share-option" type="checkbox" value="CFV Juvenil" checked><label class="form-check-label">CFV Juvenil</label></div>
+            <div class="form-check"><input class="form-check-input share-option" type="checkbox" value="CFV Red Pro" checked><label class="form-check-label">CFV Red Pro</label></div>
+            <div class="form-check"><input class="form-check-input share-option" type="checkbox" value="CFV Hombres" checked><label class="form-check-label">CFV Hombres</label></div>
+            <div class="form-check"><input class="form-check-input share-option" type="checkbox" value="CFV Mujeres" checked><label class="form-check-label">CFV Mujeres</label></div>
+            <div class="form-check"><input class="form-check-input share-option" type="checkbox" value="CFV Parejas" checked><label class="form-check-label">CFV Parejas</label></div>
+            <div class="form-check"><input class="form-check-input share-option" type="checkbox" value="CFV Integral" checked><label class="form-check-label">CFV Integral</label></div>
+          </div>
+
+          <div class="mt-4">
+            <label class="form-label fw-bold">Enlace Generado:</label>
+            <div class="input-group">
+              <input type="text" id="generatedLinkInput" class="form-control" readonly>
+              <button class="btn btn-primary" type="button" onclick="copyShareLink()">
+                <i class="bi bi-clipboard me-1"></i> Copiar
+              </button>
+            </div>
+            <div id="copyAlert" class="form-text text-success d-none mt-1">¡Enlace copiado al portapapeles!</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CONFIGURACIÓN IMPRESIÓN -->
+  <div class="modal fade no-print" id="printModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title"><i class="bi bi-printer me-2"></i>Opciones de Impresión</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p class="fw-bold mb-2">Marque los tipos de grupo que desea incluir:</p>
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" id="checkAllGroups" checked>
+            <label class="form-check-label fw-bold" for="checkAllGroups">-- Seleccionar Todos --</label>
+          </div>
+          <hr>
           <div id="printGroupOptions">
-            <div class="form-check">
-              <input class="form-check-input print-option" type="checkbox" value="CFV Pre-Juvenil" id="p1" checked>
-              <label class="form-check-label" for="p1">CFV Pre-Juvenil</label>
-            </div>
-            <div class="form-check">
-              <input class="form-check-input print-option" type="checkbox" value="CFV Juvenil" id="p2" checked>
-              <label class="form-check-label" for="p2">CFV Juvenil</label>
-            </div>
-            <div class="form-check">
-              <input class="form-check-input print-option" type="checkbox" value="CFV Red Pro" id="p3" checked>
-              <label class="form-check-label" for="p3">CFV Red Pro</label>
-            </div>
-            <div class="form-check">
-              <input class="form-check-input print-option" type="checkbox" value="CFV Hombres" id="p4" checked>
-              <label class="form-check-label" for="p4">CFV Hombres</label>
-            </div>
-            <div class="form-check">
-              <input class="form-check-input print-option" type="checkbox" value="CFV Mujeres" id="p5" checked>
-              <label class="form-check-label" for="p5">CFV Mujeres</label>
-            </div>
-            <div class="form-check">
-              <input class="form-check-input print-option" type="checkbox" value="CFV Parejas" id="p6" checked>
-              <label class="form-check-label" for="p6">CFV Parejas</label>
-            </div>
-            <div class="form-check">
-              <input class="form-check-input print-option" type="checkbox" value="CFV Integral" id="p7" checked>
-              <label class="form-check-label" for="p7">CFV Integral</label>
-            </div>
+            <div class="form-check"><input class="form-check-input print-option" type="checkbox" value="CFV Pre-Juvenil" checked><label class="form-check-label">CFV Pre-Juvenil</label></div>
+            <div class="form-check"><input class="form-check-input print-option" type="checkbox" value="CFV Juvenil" checked><label class="form-check-label">CFV Juvenil</label></div>
+            <div class="form-check"><input class="form-check-input print-option" type="checkbox" value="CFV Red Pro" checked><label class="form-check-label">CFV Red Pro</label></div>
+            <div class="form-check"><input class="form-check-input print-option" type="checkbox" value="CFV Hombres" checked><label class="form-check-label">CFV Hombres</label></div>
+            <div class="form-check"><input class="form-check-input print-option" type="checkbox" value="CFV Mujeres" checked><label class="form-check-label">CFV Mujeres</label></div>
+            <div class="form-check"><input class="form-check-input print-option" type="checkbox" value="CFV Parejas" checked><label class="form-check-label">CFV Parejas</label></div>
+            <div class="form-check"><input class="form-check-input print-option" type="checkbox" value="CFV Integral" checked><label class="form-check-label">CFV Integral</label></div>
           </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
           <button type="button" class="btn btn-primary fw-bold" onclick="executePrint()">
-            <i class="bi bi-printer-fill me-1"></i> Generar Imprimible / PDF
+            <i class="bi bi-printer-fill me-1"></i> Imprimir / Guardar PDF
           </button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Bootstrap 5 JS Bundle -->
+  <!-- JavaScript -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-  <!-- LÓGICA JAVASCRIPT -->
   <script>
-    // Variable global de datos
     let globalData = [];
-
-    // Clave para guardar en LocalStorage
     const STORAGE_KEY = 'cfv_directorio_data';
+    let sharedTypesFilter = null;
 
     document.addEventListener('DOMContentLoaded', () => {
+      checkUrlParameters();
       loadStoredData();
       setupEventListeners();
     });
 
-    // 1. Cargar datos del LocalStorage al iniciar
+    // Detectar si se abrió a través de un link público con filtro
+    function checkUrlParameters() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tiposParam = urlParams.get('tipos');
+      const modoPublico = urlParams.get('vista') === 'publica';
+
+      if (tiposParam) {
+        sharedTypesFilter = tiposParam.split(',').map(t => t.trim().toLowerCase());
+      }
+
+      if (modoPublico) {
+        document.getElementById('adminPanel').classList.add('d-none');
+        document.getElementById('selectContainer').classList.add('d-none');
+        document.getElementById('headerSubtitle').innerText = "Directorio Público de Grupos Familiares";
+      }
+    }
+
     function loadStoredData() {
       const stored = localStorage.getItem(STORAGE_KEY);
       const statusMsg = document.getElementById('statusMessage');
@@ -272,49 +328,59 @@
       if (stored) {
         try {
           globalData = JSON.parse(stored);
-          statusMsg.className = "form-text mt-2 text-success";
-          statusMsg.innerText = `✓ Se cargaron ${globalData.length} registros almacenados en memoria.`;
+          if (statusMsg) {
+            statusMsg.className = "form-text mt-2 text-success";
+            statusMsg.innerText = `✓ Se cargaron ${globalData.length} registros desde el almacenamiento local.`;
+          }
         } catch (e) {
           globalData = [];
-          statusMsg.className = "form-text mt-2 text-danger";
-          statusMsg.innerText = "Error al leer datos almacenados.";
         }
       } else {
-        statusMsg.className = "form-text mt-2 text-warning";
-        statusMsg.innerText = "No hay datos cargados. Por favor adjunte un archivo Excel para comenzar.";
+        if (statusMsg) {
+          statusMsg.className = "form-text mt-2 text-warning";
+          statusMsg.innerText = "Por favor adjunte el archivo Excel con los datos para empezar.";
+        }
       }
       renderPublicView();
+      updateGeneratedLink();
     }
 
-    // 2. Configuración de Listeners
     function setupEventListeners() {
-      // Evento al subir archivo Excel
-      document.getElementById('excelFile').addEventListener('change', handleFileUpload);
+      const excelInput = document.getElementById('excelFile');
+      if (excelInput) excelInput.addEventListener('change', handleFileUpload);
 
-      // Eventos de filtrado
       document.getElementById('tipoGrupoSelect').addEventListener('change', renderPublicView);
       document.getElementById('searchBox').addEventListener('input', renderPublicView);
 
-      // Evento Borrar Datos
-      document.getElementById('btnClearData').addEventListener('click', () => {
-        if (confirm('¿Desea borrar todos los datos almacenados localmente?')) {
-          localStorage.removeItem(STORAGE_KEY);
-          globalData = [];
-          document.getElementById('excelFile').value = '';
-          document.getElementById('statusMessage').className = "form-text mt-2 text-warning";
-          document.getElementById('statusMessage').innerText = "Datos eliminados correctamente.";
-          renderPublicView();
-        }
+      const btnClear = document.getElementById('btnClearData');
+      if (btnClear) {
+        btnClear.addEventListener('click', () => {
+          if (confirm('¿Desea borrar todos los datos guardados en el navegador?')) {
+            localStorage.removeItem(STORAGE_KEY);
+            globalData = [];
+            document.getElementById('excelFile').value = '';
+            document.getElementById('statusMessage').className = "form-text mt-2 text-warning";
+            document.getElementById('statusMessage').innerText = "Datos eliminados.";
+            renderPublicView();
+          }
+        });
+      }
+
+      // Escuchar cambios en los checkboxes de compartir
+      document.querySelectorAll('.share-option').forEach(cb => {
+        cb.addEventListener('change', updateGeneratedLink);
       });
 
-      // Checkbox seleccionar todos en modal
+      document.getElementById('checkAllShare').addEventListener('change', function() {
+        document.querySelectorAll('.share-option').forEach(cb => cb.checked = this.checked);
+        updateGeneratedLink();
+      });
+
       document.getElementById('checkAllGroups').addEventListener('change', function() {
-        const checkboxes = document.querySelectorAll('.print-option');
-        checkboxes.forEach(cb => cb.checked = this.checked);
+        document.querySelectorAll('.print-option').forEach(cb => cb.checked = this.checked);
       });
     }
 
-    // 3. Manejo de archivo Excel subido
     function handleFileUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -324,10 +390,7 @@
         try {
           const data = new Uint8Array(e.target.result);
           const workbook = XLSX.read(data, { type: 'array' });
-          const firstSheetName = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[firstSheetName];
-          
-          // Convertir a JSON
+          const worksheet = workbook.Sheets[workbook.SheetNames[0]];
           const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: 'Sin Asignar' });
 
           if (jsonData && jsonData.length > 0) {
@@ -336,26 +399,4 @@
             
             const statusMsg = document.getElementById('statusMessage');
             statusMsg.className = "form-text mt-2 text-success";
-            statusMsg.innerText = `✓ ¡Éxito! Se han importado y guardado ${globalData.length} registros.`;
-
-            renderPublicView();
-          } else {
-            alert('El archivo no contiene registros válidos.');
-          }
-        } catch (error) {
-          console.error(error);
-          alert('Ocurrió un error al procesar el archivo Excel. Asegúrese de adjuntar un formato válido.');
-        }
-      };
-      reader.readAsArrayBuffer(file);
-    }
-
-    // 4. Renderizado de la Vista Pública
-    function renderPublicView() {
-      const selectedType = document.getElementById('tipoGrupoSelect').value;
-      const searchText = document.getElementById('searchBox').value.toLowerCase().trim();
-      const container = document.getElementById('publicDirectoryContainer');
-      const groupTitle = document.getElementById('groupTitle');
-      const counter = document.getElementById('recordCounter');
-
-      group
+            statusMsg.innerText = `✓
