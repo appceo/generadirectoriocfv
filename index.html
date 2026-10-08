@@ -8,7 +8,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-  <!-- SheetJS para lectura de archivos Excel / CSV -->
+  <!-- SheetJS para lectura de archivos Excel -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
   <style>
@@ -224,7 +224,7 @@
           <label for="selectOrden" class="form-label fw-bold text-secondary mb-1">
             <i class="bi bi-sort-down me-1"></i> Ordenar Vista Previa Por:
           </label>
-          <select id="selectOrden" class="form-select border-primary" onchange="actualizarTodo()">
+          <select id="selectOrden" class="form-select border-primary fw-semibold" onchange="actualizarTodo()">
             <option value="nombre" selected>Nombre del Grupo (A - Z)</option>
             <option value="direccion">Dirección (A - Z)</option>
             <option value="dia">Día de Realización (Lunes a Domingo)</option>
@@ -264,7 +264,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // DATOS DE RESPALDO PREDETERMINADOS (102 Registros de Informe CFV OCT 8)
+    // DATOS DE RESPALDO CON TILDES CORRECTAS
     const datosIniciales = [
       {"Nombre":"CFV-H02 Iván Aguirre","Dirección":"SUBA - Prado Veraniego - Igleco 127 - Cra. 49 No. 127D 59 Salón 204","Teléfono":"3008550902","Día de Reunión":"Viernes","Hora de Reunión":"07:00 PM","Encargados":"Ivan Aguirre","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"13","Tipo Grupo":"CFV Hombres"},
       {"Nombre":"CFV-I01 Alfonso Vega","Dirección":"SUBA - Victoria Norte - Calle 150 # 53- 32","Teléfono":"3112189679","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Alfonso Vega , Rosa De Vega","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"22","Tipo Grupo":"CFV Integral"},
@@ -287,7 +287,7 @@
     ];
 
     let rawData = [];
-    const STORAGE_KEY = 'cfv_directorio_db_v3';
+    const STORAGE_KEY = 'cfv_directorio_db_v4';
 
     window.onload = function() {
       revisarUrlPublica();
@@ -328,7 +328,7 @@
           rawData = JSON.parse(guardado);
           if (status) {
             status.className = "form-text mt-2 fw-semibold text-success";
-            status.innerText = `✓ Se cargaron ${rawData.length} grupos desde la memoria local.`;
+            status.innerText = `✓ Se cargaron ${rawData.length} grupos desde la memoria del navegador.`;
           }
         } catch(e) {
           rawData = datosIniciales;
@@ -349,26 +349,34 @@
       const fileName = file.name.toLowerCase();
 
       if (fileName.endsWith('.csv')) {
-        // LECTURA ROBUSTA DE CSV
         const reader = new FileReader();
         reader.onload = function(evt) {
           try {
-            const text = evt.target.result;
+            let buffer = evt.target.result;
+            // Detectar codificación Windows-1252 / ANSI vs UTF-8 para corregir tildes
+            let decoder = new TextDecoder('windows-1252');
+            let text = decoder.decode(buffer);
+
+            // Si contiene caracteres extraños de codificación, decodificar como UTF-8
+            if (!text.includes('') && text.includes('Ã')) {
+              decoder = new TextDecoder('utf-8');
+              text = decoder.decode(buffer);
+            }
+
             const parsedJson = parsearCSV(text);
             if (parsedJson && parsedJson.length > 0) {
               rawData = parsedJson;
               localStorage.setItem(STORAGE_KEY, JSON.stringify(rawData));
               mostrarExitoCarga(rawData.length, file.name);
             } else {
-              alert('El archivo CSV no contiene registros válidos.');
+              alert('El archivo CSV no contiene datos válidos.');
             }
           } catch(err) {
             alert('Error al leer el archivo CSV.');
           }
         };
-        reader.readAsText(file, 'UTF-8');
+        reader.readAsArrayBuffer(file);
       } else {
-        // LECTURA DE ARCHIVOS EXCEL
         const reader = new FileReader();
         reader.onload = function(evt) {
           try {
@@ -382,7 +390,7 @@
               localStorage.setItem(STORAGE_KEY, JSON.stringify(rawData));
               mostrarExitoCarga(rawData.length, file.name);
             } else {
-              alert('El archivo no contiene registros válidos.');
+              alert('El archivo Excel no contiene registros válidos.');
             }
           } catch (err) {
             alert('Error al procesar el archivo Excel.');
@@ -399,7 +407,6 @@
       actualizarTodo();
     }
 
-    // Parser manual para CSV que soporta delimitadores comas o punto y coma
     function parsearCSV(text) {
       const lines = text.split(/\r\n|\n/).filter(line => line.trim() !== '');
       if (lines.length < 2) return [];
@@ -466,31 +473,49 @@
           <div class="col-12 text-center py-5 text-warning">
             <i class="bi bi-exclamation-triangle fs-1 d-block mb-2"></i>
             <h5 class="fw-bold">Sin tipos de grupo seleccionados</h5>
-            <p class="small">Marque al menos una casilla de la lista o haga clic en <strong>"Marcar Todos"</strong>.</p>
+            <p class="small">Marque al menos una casilla arriba o haga clic en <strong>"Marcar Todos"</strong>.</p>
           </div>`;
         counter.innerText = "0 Grupos";
         return;
       }
 
-      // Filtrar por tipos de grupo elegidos
+      // Filtrar
       let filtrados = rawData.filter(item => {
         const tipoLimpio = normalizar(item['Tipo Grupo'] || '');
         return seleccionados.includes(tipoLimpio);
       });
 
-      // Ordenar resultados
+      // Ordenar resultados según la opción seleccionada
       const ordenVal = document.getElementById('selectOrden').value;
-      const mapaDias = { 'lunes': 1, 'martes': 2, 'miercoles': 3, 'miércoles': 3, 'jueves': 4, 'viernes': 5, 'sabado': 6, 'sábado': 6, 'domingo': 7 };
+      const mapaDias = { 
+        'lunes': 1, 
+        'martes': 2, 
+        'miercoles': 3, 
+        'miércoles': 3, 
+        'jueves': 4, 
+        'viernes': 5, 
+        'sabado': 6, 
+        'sábado': 6, 
+        'domingo': 7 
+      };
 
       filtrados.sort((a, b) => {
         if (ordenVal === 'nombre') {
-          return String(a['Nombre'] || '').localeCompare(String(b['Nombre'] || ''));
+          return String(a['Nombre'] || '').localeCompare(String(b['Nombre'] || ''), 'es', { sensitivity: 'base' });
         } else if (ordenVal === 'direccion') {
-          return String(a['Dirección'] || '').localeCompare(String(b['Dirección'] || ''));
+          return String(a['Dirección'] || '').localeCompare(String(b['Dirección'] || ''), 'es', { sensitivity: 'base' });
         } else if (ordenVal === 'dia') {
-          const dA = mapaDias[normalizar(a['Día de Reunión'] || '')] || 99;
-          const dB = mapaDias[normalizar(b['Día de Reunión'] || '')] || 99;
-          return dA - dB;
+          const diaAStr = limpiaSignos(a['Día de Reunión'] || a['Dia de Reunion'] || '');
+          const diaBStr = limpiaSignos(b['Día de Reunión'] || b['Dia de Reunion'] || '');
+          
+          const dA = mapaDias[diaAStr] || 99;
+          const dB = mapaDias[diaBStr] || 99;
+
+          if (dA !== dB) {
+            return dA - dB;
+          }
+          // Si es el mismo día, ordenar por Nombre
+          return String(a['Nombre'] || '').localeCompare(String(b['Nombre'] || ''), 'es', { sensitivity: 'base' });
         }
         return 0;
       });
@@ -510,6 +535,9 @@
       // Renderizado limpio de tarjetas
       let html = '';
       filtrados.forEach(item => {
+        const diaVal = item['Día de Reunión'] || item['Dia de Reunion'] || 'Sin Asignar';
+        const horaVal = item['Hora de Reunión'] || item['Hora de Reunion'] || 'Sin Asignar';
+
         html += `
           <div class="col-md-6 col-lg-4">
             <div class="card card-custom group-card h-100 p-3 border-top border-4 border-primary">
@@ -520,10 +548,10 @@
               <hr class="my-2 text-muted">
               <div class="small">
                 <p class="mb-1"><span class="info-label"><i class="bi bi-person-badge-fill text-info me-1"></i>Encargados:</span> ${escapar(item['Encargados'] || 'Sin Asignar')}</p>
-                <p class="mb-1"><span class="info-label"><i class="bi bi-calendar-event-fill text-primary me-1"></i>Día de Reunión:</span> ${escapar(item['Día de Reunión'] || 'Sin Asignar')}</p>
-                <p class="mb-1"><span class="info-label"><i class="bi bi-clock-fill text-warning me-1"></i>Hora de Reunión:</span> ${escapar(item['Hora de Reunión'] || 'Sin Asignar')}</p>
-                <p class="mb-1"><span class="info-label"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Dirección:</span> ${escapar(item['Dirección'] || 'Sin Asignar')}</p>
-                <p class="mb-1"><span class="info-label"><i class="bi bi-telephone-fill text-success me-1"></i>Teléfono:</span> ${escapar(item['Teléfono'] || 'Sin Asignar')}</p>
+                <p class="mb-1"><span class="info-label"><i class="bi bi-calendar-event-fill text-primary me-1"></i>Día de Reunión:</span> ${escapar(diaVal)}</p>
+                <p class="mb-1"><span class="info-label"><i class="bi bi-clock-fill text-warning me-1"></i>Hora de Reunión:</span> ${escapar(horaVal)}</p>
+                <p class="mb-1"><span class="info-label"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Dirección:</span> ${escapar(item['Dirección'] || item['Direccion'] || 'Sin Asignar')}</p>
+                <p class="mb-1"><span class="info-label"><i class="bi bi-telephone-fill text-success me-1"></i>Teléfono:</span> ${escapar(item['Teléfono'] || item['Telefono'] || 'Sin Asignar')}</p>
                 <p class="mb-1"><span class="info-label"><i class="bi bi-building me-1"></i>Sede:</span> ${escapar(item['Sede'] || 'Sin Asignar')}</p>
                 <p class="mb-1"><span class="info-label"><i class="bi bi-people me-1"></i>Asistentes Directos:</span> ${escapar(item['Cantidad Asistentes Directos'] || '0')}</p>
                 <p class="mb-0"><span class="info-label"><i class="bi bi-journal-check me-1"></i>Último Reporte:</span> ${escapar(item['Fecha Ultimo Reporte'] || 'Sin Reporte')}</p>
@@ -605,13 +633,16 @@
           `;
 
           grupos.forEach(g => {
+            const diaVal = g['Día de Reunión'] || g['Dia de Reunion'] || '';
+            const horaVal = g['Hora de Reunión'] || g['Hora de Reunion'] || '';
+
             printHtml += `
               <tr>
                 <td><strong>${escapar(g['Nombre'] || '')}</strong></td>
                 <td>${escapar(g['Encargados'] || 'Sin Asignar')}</td>
-                <td>${escapar(g['Día de Reunión'] || '')}<br><small>${escapar(g['Hora de Reunión'] || '')}</small></td>
-                <td>${escapar(g['Dirección'] || 'Sin Asignar')}</td>
-                <td>${escapar(g['Teléfono'] || 'Sin Asignar')}</td>
+                <td>${escapar(diaVal)}<br><small>${escapar(horaVal)}</small></td>
+                <td>${escapar(g['Dirección'] || g['Direccion'] || 'Sin Asignar')}</td>
+                <td>${escapar(g['Teléfono'] || g['Telefono'] || 'Sin Asignar')}</td>
               </tr>
             `;
           });
@@ -622,6 +653,14 @@
 
       area.innerHTML = printHtml;
       setTimeout(() => { window.print(); }, 300);
+    }
+
+    function limpiaSignos(txt) {
+      return String(txt || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim();
     }
 
     function normalizar(txt) {
