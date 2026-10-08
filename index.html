@@ -8,7 +8,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-  <!-- SheetJS para lectura de archivos Excel -->
+  <!-- SheetJS para lectura de Excel -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
   <style>
@@ -120,112 +120,111 @@
   <header class="header-banner no-print">
     <div class="container text-center">
       <h1 class="fw-bold mb-1"><i class="bi bi-people-fill me-2"></i>Directorio de Grupos CFV</h1>
-      <p class="lead mb-0 fs-6" id="headerSubtitle">Consulta y Directorio de Grupos Familiares CFV</p>
+      <p class="lead mb-0 fs-6" id="headerSubtitle">Consulta de Grupos Familiares CFV</p>
     </div>
   </header>
 
   <div class="container mb-5">
 
-    <!-- PANEL DE ADMINISTRACIÓN (Oculto en el link público) -->
+    <!-- PANEL ADMINISTRACIÓN -->
     <div id="adminPanel" class="row g-3 mb-4 no-print">
       <div class="col-md-7">
         <div class="card card-custom p-3 h-100">
-          <h5 class="card-title text-primary"><i class="bi bi-file-earmark-spreadsheet me-2"></i>Actualizar Base de Datos (Opcional)</h5>
-          <p class="text-muted small mb-2">Si tiene un nuevo archivo Excel (.xlsx), adjúntelo aquí para actualizar los grupos.</p>
+          <h5 class="card-title text-primary"><i class="bi bi-file-earmark-spreadsheet me-2"></i>Cargar / Actualizar Archivo Excel</h5>
+          <p class="text-muted small mb-2">Adjunte el archivo Excel (.xlsx) con los datos de los grupos.</p>
           <div class="input-group">
-            <input type="file" id="excelFile" class="form-control" accept=".xlsx, .xls, .csv">
-            <button class="btn btn-outline-danger" type="button" id="btnClearData" title="Restablecer datos originales">
-              <i class="bi bi-arrow-counterclockwise"></i>
+            <input type="file" id="excelFile" class="form-control" accept=".xlsx, .xls, .csv" onchange="procesarExcel(event)">
+            <button class="btn btn-outline-danger" type="button" onclick="limpiarDatos()" title="Borrar datos">
+              <i class="bi bi-trash"></i>
             </button>
           </div>
-          <div id="statusMessage" class="form-text mt-2 fw-semibold text-success">✓ Base de datos predeterminada cargada correctamente.</div>
+          <div id="statusMessage" class="form-text mt-2 fw-semibold"></div>
         </div>
       </div>
 
       <div class="col-md-5">
         <div class="card card-custom p-3 h-100 d-flex flex-column justify-content-between">
           <div>
-            <h5 class="card-title text-primary"><i class="bi bi-printer me-2"></i>Imprimir / Exportar PDF</h5>
-            <p class="text-muted small mb-2">Genere un informe impreso profesional de los grupos seleccionados.</p>
+            <h5 class="card-title text-primary"><i class="bi bi-printer me-2"></i>Imprimir Reporte PDF</h5>
+            <p class="text-muted small mb-2">Imprima un informe profesional con los grupos seleccionados.</p>
           </div>
-          <button class="btn btn-success w-100 fw-bold" id="btnImprimir">
+          <button class="btn btn-success w-100 fw-bold" onclick="imprimirDirectorio()">
             <i class="bi bi-printer-fill me-2"></i> Imprimir Selección Actual
           </button>
         </div>
       </div>
     </div>
 
-    <!-- SECCIÓN DE SELECCIÓN Y ORDENAMIENTO (Oculto en el link público) -->
+    <!-- FILTROS Y CONTROLES (Se ocultan en el link público) -->
     <div id="filterPanel" class="card card-custom p-4 no-print mb-4">
       <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="fw-bold text-primary mb-0"><i class="bi bi-check2-square me-2"></i>Seleccione uno o varios Tipos de Grupos CFV:</h5>
+        <h5 class="fw-bold text-primary mb-0"><i class="bi bi-check2-square me-2"></i>Seleccione Tipos de Grupo CFV:</h5>
         <div>
-          <button type="button" class="btn btn-sm btn-primary me-2 fw-bold" id="btnMarcarTodos">Marcar Todos</button>
-          <button type="button" class="btn btn-sm btn-outline-secondary fw-bold" id="btnDesmarcarTodos">Desmarcar Todos</button>
+          <button type="button" class="btn btn-sm btn-primary me-2 fw-bold" onclick="seleccionarTodos(true)">Marcar Todos</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary fw-bold" onclick="seleccionarTodos(false)">Desmarcar Todos</button>
         </div>
       </div>
 
-      <!-- Checkboxes para cada tipo CFV -->
       <div class="checkbox-box mb-3">
-        <div class="row g-2" id="cfvCheckboxesContainer">
+        <div class="row g-2">
           <div class="col-6 col-md-3">
             <div class="form-check">
-              <input class="form-check-input group-type-check" type="checkbox" value="CFV Pre-Juvenil" id="chk1" checked>
-              <label class="form-check-label fw-semibold" for="chk1">CFV Pre-Juvenil</label>
+              <input class="form-check-input chk-tipo" type="checkbox" value="CFV Pre-Juvenil" id="c1" checked onchange="actualizarTodo()">
+              <label class="form-check-label fw-semibold" for="c1">CFV Pre-Juvenil</label>
             </div>
           </div>
           <div class="col-6 col-md-3">
             <div class="form-check">
-              <input class="form-check-input group-type-check" type="checkbox" value="CFV Juvenil" id="chk2" checked>
-              <label class="form-check-label fw-semibold" for="chk2">CFV Juvenil</label>
+              <input class="form-check-input chk-tipo" type="checkbox" value="CFV Juvenil" id="c2" checked onchange="actualizarTodo()">
+              <label class="form-check-label fw-semibold" for="c2">CFV Juvenil</label>
             </div>
           </div>
           <div class="col-6 col-md-3">
             <div class="form-check">
-              <input class="form-check-input group-type-check" type="checkbox" value="CFV Red Pro" id="chk3" checked>
-              <label class="form-check-label fw-semibold" for="chk3">CFV Red Pro</label>
+              <input class="form-check-input chk-tipo" type="checkbox" value="CFV Red Pro" id="c3" checked onchange="actualizarTodo()">
+              <label class="form-check-label fw-semibold" for="c3">CFV Red Pro</label>
             </div>
           </div>
           <div class="col-6 col-md-3">
             <div class="form-check">
-              <input class="form-check-input group-type-check" type="checkbox" value="CFV Hombres" id="chk4" checked>
-              <label class="form-check-label fw-semibold" for="chk4">CFV Hombres</label>
+              <input class="form-check-input chk-tipo" type="checkbox" value="CFV Hombres" id="c4" checked onchange="actualizarTodo()">
+              <label class="form-check-label fw-semibold" for="c4">CFV Hombres</label>
             </div>
           </div>
           <div class="col-6 col-md-3">
             <div class="form-check">
-              <input class="form-check-input group-type-check" type="checkbox" value="CFV Mujeres" id="chk5" checked>
-              <label class="form-check-label fw-semibold" for="chk5">CFV Mujeres</label>
+              <input class="form-check-input chk-tipo" type="checkbox" value="CFV Mujeres" id="c5" checked onchange="actualizarTodo()">
+              <label class="form-check-label fw-semibold" for="c5">CFV Mujeres</label>
             </div>
           </div>
           <div class="col-6 col-md-3">
             <div class="form-check">
-              <input class="form-check-input group-type-check" type="checkbox" value="CFV Parejas" id="chk6" checked>
-              <label class="form-check-label fw-semibold" for="chk6">CFV Parejas</label>
+              <input class="form-check-input chk-tipo" type="checkbox" value="CFV Parejas" id="c6" checked onchange="actualizarTodo()">
+              <label class="form-check-label fw-semibold" for="c6">CFV Parejas</label>
             </div>
           </div>
           <div class="col-6 col-md-3">
             <div class="form-check">
-              <input class="form-check-input group-type-check" type="checkbox" value="CFV Integral" id="chk7" checked>
-              <label class="form-check-label fw-semibold" for="chk7">CFV Integral</label>
+              <input class="form-check-input chk-tipo" type="checkbox" value="CFV Integral" id="c7" checked onchange="actualizarTodo()">
+              <label class="form-check-label fw-semibold" for="c7">CFV Integral</label>
             </div>
           </div>
           <div class="col-6 col-md-3">
             <div class="form-check">
-              <input class="form-check-input group-type-check" type="checkbox" value="CFV Kids" id="chk8" checked>
-              <label class="form-check-label fw-semibold" for="chk8">CFV Kids</label>
+              <input class="form-check-input chk-tipo" type="checkbox" value="CFV Kids" id="c8" checked onchange="actualizarTodo()">
+              <label class="form-check-label fw-semibold" for="c8">CFV Kids</label>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- CAMPO DE ORDENAMIENTO -->
+      <!-- SELECTOR DE ORDENAMIENTO -->
       <div class="row align-items-center mb-3">
         <div class="col-md-6">
-          <label for="sortOrderSelect" class="form-label fw-bold text-secondary mb-1">
+          <label for="selectOrden" class="form-label fw-bold text-secondary mb-1">
             <i class="bi bi-sort-down me-1"></i> Ordenar Vista Previa Por:
           </label>
-          <select id="sortOrderSelect" class="form-select border-primary">
+          <select id="selectOrden" class="form-select border-primary" onchange="actualizarTodo()">
             <option value="nombre" selected>Nombre del Grupo (A - Z)</option>
             <option value="direccion">Dirección (A - Z)</option>
             <option value="dia">Día de Realización (Lunes a Domingo)</option>
@@ -233,12 +232,12 @@
         </div>
       </div>
 
-      <!-- ENLACE PÚBLICO GENERADO -->
+      <!-- ENLACE PÚBLICO -->
       <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 pt-2 border-top">
-        <span class="text-muted small fw-semibold">Comparta este enlace público limpio con los usuarios:</span>
+        <span class="text-muted small fw-semibold">Copie y comparta este enlace público limpio con los usuarios:</span>
         <div class="d-flex gap-2 w-100 w-md-auto">
-          <input type="text" id="publicLinkDisplay" class="form-control form-control-sm" readonly style="max-width: 380px;">
-          <button type="button" class="btn btn-sm btn-primary fw-bold text-nowrap" id="btnCopiarLink">
+          <input type="text" id="publicLinkInput" class="form-control form-control-sm" readonly style="max-width: 380px;">
+          <button type="button" class="btn btn-sm btn-primary fw-bold text-nowrap" onclick="copiarLinkPublico()">
             <i class="bi bi-link-45deg me-1"></i> Copiar Enlace Público
           </button>
         </div>
@@ -246,146 +245,99 @@
       <div id="copyAlert" class="text-success small fw-bold text-end mt-1 d-none">¡Enlace copiado al portapapeles!</div>
     </div>
 
-    <!-- VISTA DEL DIRECTORIO -->
+    <!-- DIRECTORIO DE TARJETAS -->
     <div class="card card-custom p-4 no-print">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h4 id="groupTitle" class="text-primary fw-bold mb-0">Directorio de Grupos</h4>
         <span id="recordCounter" class="badge bg-primary fs-6">0 Grupos Encontrados</span>
       </div>
 
-      <div id="publicDirectoryContainer" class="row g-3">
-        <!-- Tarjetas dinámicas -->
+      <div id="directoryContainer" class="row g-3">
+        <!-- Tarjetas generadas dinámicamente -->
       </div>
     </div>
 
-    <!-- IMPRESIÓN -->
-    <div id="printContainer" class="print-only"></div>
+    <!-- AREA IMPRESION -->
+    <div id="printArea" class="print-only"></div>
 
   </div>
 
-  <!-- JavaScript -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // DATOS DE RESPALDO PREDETERMINADOS (Informe CFV OCT 8.xlsx)
-    const defaultCFVData = [
-      {"Nombre":"CFV-H02 Iván Aguirre","Dirección":"SUBA - Prado Veraniego - Igleco 127 - Cra. 49 No. 127D 59 Salón 204","Teléfono":"3008550902","Día de Reunión":"Viernes","Hora de Reunión":"07:00 PM","Encargados":"Ivan Aguirre","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"13","Tipo Grupo":"CFV Hombres"},
-      {"Nombre":"CFV-I01 Alfonso Vega","Dirección":"SUBA - Victoria Norte - Calle 150 # 53- 32","Teléfono":"3112189679","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Alfonso Vega , Rosa De Vega","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"22","Tipo Grupo":"CFV Integral"},
-      {"Nombre":"CFV-I02 Oscar Ramírez","Dirección":"SUBA - Alhambra - Calle 114 A 47-35","Teléfono":"3164953932","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Oscar Ramírez , Mónica Bernal","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"8","Tipo Grupo":"CFV Integral"},
-      {"Nombre":"CFV-I03 Héctor Vargas","Dirección":"USAQUÉN - Cedritos - Calle 140 # 13- 58 Apto 201 Torre 2","Teléfono":"3015629166","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Héctor Vargas , Mónica Del Pilar Arciniegas","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"10","Tipo Grupo":"CFV Integral"},
-      {"Nombre":"CFV-I04 Mónica Rodríguez","Dirección":"SUBA - Prado Veraniego - Calle 131 A #49-16 Apto 402","Teléfono":"3203061614","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Mónica Rodríguez","Fecha Ultimo Reporte":"2026-09-25","Sede":"1","Cantidad Asistentes Directos":"11","Tipo Grupo":"CFV Integral"},
-      {"Nombre":"CFV-I05 Nelly Jiménez","Dirección":"SUBA - Suba Naranjos - Transversal 91 #130 A 41 Torre 13 Apto 502","Teléfono":"3202319208","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Nelly Jiménez","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"9","Tipo Grupo":"CFV Integral"},
-      {"Nombre":"CFV-I06 Jorge Parada","Dirección":"USAQUÉN - Cedritos - Calle 147 # 19-70 Apto 202 T 3","Teléfono":"3153363363","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Jorge Parada , Diana Marcela Gomez","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"18","Tipo Grupo":"CFV Integral"},
-      {"Nombre":"CFV-I07 María Tibasosa","Dirección":"SUBA - Prado Veraniego - Carrera 50 # 128 - 25 Apto 302","Teléfono":"3112282245","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Maria Tibasosa","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"15","Tipo Grupo":"CFV Integral"},
-      {"Nombre":"CFV-I08 Carmen Araque","Dirección":"USAQUÉN - San Cristóbal Norte - Carrera 8 B # 162- 31","Teléfono":"3108670138","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Carmen Araque","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"10","Tipo Grupo":"CFV Integral"},
-      {"Nombre":"CFV-I09 Carlos Arenas","Dirección":"SUBA - Mazurén - Calle 152 # 54- 35 Apto 404 T 2","Teléfono":"3102115160","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Carlos Arenas , Ruth Nery Veloza","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"12","Tipo Grupo":"CFV Integral"},
-      {"Nombre":"CFV-I10 Jorge Mesa","Dirección":"SUBA - Mazurén - Carrera 55 # 152- 30 Apto 204 T 2","Teléfono":"3134232338","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Jorge Mesa , Luz Mery De Mesa","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"14","Tipo Grupo":"CFV Integral"},
-      {"Nombre":"CFV-M01 Mónica Arciniegas","Dirección":"USAQUÉN - Cedritos - Calle 140 # 13- 58 Apto 201 Torre 2","Teléfono":"3015629166","Día de Reunión":"Martes","Hora de Reunión":"07:00 PM","Encargados":"Mónica Del Pilar Arciniegas","Fecha Ultimo Reporte":"2026-09-29","Sede":"1","Cantidad Asistentes Directos":"8","Tipo Grupo":"CFV Mujeres"},
-      {"Nombre":"CFV-M02 Mónica Bernal","Dirección":"SUBA - Alhambra - Calle 114 A 47-35","Teléfono":"3164953932","Día de Reunión":"Miércoles","Hora de Reunión":"07:00 PM","Encargados":"Mónica Bernal","Fecha Ultimo Reporte":"2026-09-30","Sede":"1","Cantidad Asistentes Directos":"7","Tipo Grupo":"CFV Mujeres"},
-      {"Nombre":"CFV-K01 Sandra Reyes","Dirección":"SUBA - Prado Veraniego - Calle 128 B # 46 - 45","Teléfono":"3138871230","Día de Reunión":"Sábado","Hora de Reunión":"10:00 AM","Encargados":"Sandra Reyes","Fecha Ultimo Reporte":"2026-10-03","Sede":"1","Cantidad Asistentes Directos":"15","Tipo Grupo":"CFV Kids"},
-      {"Nombre":"CFV-J01 Santiago Sandoval","Dirección":"SUBA - Prado Veraniego - Cra 49 # 127D-59 Salón 201","Teléfono":"3107865412","Día de Reunión":"Sábado","Hora de Reunión":"04:00 PM","Encargados":"Santiago Sandoval","Fecha Ultimo Reporte":"2026-10-03","Sede":"1","Cantidad Asistentes Directos":"18","Tipo Grupo":"CFV Juvenil"},
-      {"Nombre":"CFV-PJ01 Angie Bernal","Dirección":"SUBA - Prado Veraniego - Cra 49 # 127D-59 Salón 202","Teléfono":"3124567890","Día de Reunión":"Sábado","Hora de Reunión":"03:00 PM","Encargados":"Angie Bernal","Fecha Ultimo Reporte":"2026-10-03","Sede":"1","Cantidad Asistentes Directos":"12","Tipo Grupo":"CFV Pre-Juvenil"},
-      {"Nombre":"CFV-P01 Carlos Salas","Dirección":"SUBA - San José de Banderas - Calle 160 # 62-10","Teléfono":"3159876543","Día de Reunión":"Viernes","Hora de Reunión":"07:30 PM","Encargados":"Carlos Salas , Angie Aldana","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"16","Tipo Grupo":"CFV Parejas"},
-      {"Nombre":"CFV-RP01 Laurieth Palomino","Dirección":"SUBA - Prado Veraniego - Cra 49 # 127D-59 Salón 203","Teléfono":"3176543210","Día de Reunión":"Jueves","Hora de Reunión":"07:00 PM","Encargados":"Laurieth Palomino","Fecha Ultimo Reporte":"2026-10-01","Sede":"1","Cantidad Asistentes Directos":"14","Tipo Grupo":"CFV Red Pro"}
-    ];
+    let rawData = [];
+    const STORAGE_KEY = 'cfv_directorio_db';
 
-    let globalData = [];
-    const STORAGE_KEY = 'cfv_directorio_data';
-    let isPublicViewMode = false;
+    window.onload = function() {
+      revisarUrlPublica();
+      cargarDatosAlmacenados();
+      actualizarTodo();
+    };
 
-    window.addEventListener('DOMContentLoaded', () => {
-      cargarDatosIniciales();
-      verificarModoPublico();
-      configurarEventos();
-      renderizarTodo();
-    });
-
-    function cargarDatosIniciales() {
-      const guardado = localStorage.getItem(STORAGE_KEY);
-      if (guardado) {
-        try {
-          globalData = JSON.parse(guardado);
-        } catch (e) {
-          globalData = defaultCFVData;
-        }
-      } else {
-        globalData = defaultCFVData;
-      }
-    }
-
-    function verificarModoPublico() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const tiposParam = urlParams.get('tipos');
-      const ordenParam = urlParams.get('orden');
-      const vista = urlParams.get('vista');
+    function revisarUrlPublica() {
+      const params = new URLSearchParams(window.location.search);
+      const tipos = params.get('tipos');
+      const orden = params.get('orden');
+      const vista = params.get('vista');
 
       if (vista === 'publica') {
-        isPublicViewMode = true;
-        // Ocultar completamente los paneles de edición y filtrado
         document.getElementById('adminPanel').classList.add('d-none');
         document.getElementById('filterPanel').classList.add('d-none');
         document.getElementById('headerSubtitle').innerText = "Directorio Oficial de Grupos Familiares";
       }
 
-      if (tiposParam) {
-        const seleccionados = tiposParam.split(',').map(t => decodeURIComponent(t).trim().toLowerCase());
-        document.querySelectorAll('.group-type-check').forEach(cb => {
-          cb.checked = seleccionados.includes(cb.value.trim().toLowerCase());
+      if (tipos) {
+        const listaTipos = tipos.split(',').map(t => decodeURIComponent(t).trim().toLowerCase());
+        document.querySelectorAll('.chk-tipo').forEach(cb => {
+          cb.checked = listaTipos.includes(cb.value.trim().toLowerCase());
         });
       }
 
-      if (ordenParam) {
-        document.getElementById('sortOrderSelect').value = ordenParam;
+      if (orden) {
+        document.getElementById('selectOrden').value = orden;
       }
     }
 
-    function configurarEventos() {
-      document.getElementById('btnMarcarTodos').addEventListener('click', () => {
-        document.querySelectorAll('.group-type-check').forEach(cb => cb.checked = true);
-        renderizarTodo();
-      });
+    function cargarDatosAlmacenados() {
+      const guardado = localStorage.getItem(STORAGE_KEY);
+      const status = document.getElementById('statusMessage');
 
-      document.getElementById('btnDesmarcarTodos').addEventListener('click', () => {
-        document.querySelectorAll('.group-type-check').forEach(cb => cb.checked = false);
-        renderizarTodo();
-      });
-
-      document.querySelectorAll('.group-type-check').forEach(cb => {
-        cb.addEventListener('change', renderizarTodo);
-      });
-
-      document.getElementById('sortOrderSelect').addEventListener('change', renderizarTodo);
-      document.getElementById('btnCopiarLink').addEventListener('click', copiarEnlace);
-      document.getElementById('btnImprimir').addEventListener('click', imprimirDirectorio);
-      document.getElementById('excelFile').addEventListener('change', procesarExcel);
-
-      document.getElementById('btnClearData').addEventListener('click', () => {
-        if (confirm('¿Desea restablecer el directorio a los datos predeterminados?')) {
-          localStorage.removeItem(STORAGE_KEY);
-          globalData = defaultCFVData;
-          document.getElementById('excelFile').value = '';
-          document.getElementById('statusMessage').innerText = "✓ Se han restablecido los datos predeterminados.";
-          renderizarTodo();
+      if (guardado) {
+        try {
+          rawData = JSON.parse(guardado);
+          if (status) {
+            status.className = "form-text mt-2 fw-semibold text-success";
+            status.innerText = `✓ Se cargaron ${rawData.length} grupos guardados.`;
+          }
+        } catch(e) {
+          rawData = [];
         }
-      });
+      } else {
+        if (status) {
+          status.className = "form-text mt-2 fw-semibold text-warning";
+          status.innerText = "Suba el archivo Excel (.xlsx) arriba para cargar la base de datos.";
+        }
+      }
     }
 
-    function procesarExcel(event) {
-      const file = event.target.files[0];
+    function procesarExcel(e) {
+      const file = e.target.files[0];
       if (!file) return;
 
       const reader = new FileReader();
-      reader.onload = function(e) {
+      reader.onload = function(evt) {
         try {
-          const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-          const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: 'Sin Asignar' });
+          const data = new Uint8Array(evt.target.result);
+          const wb = XLSX.read(data, { type: 'array' });
+          const sheet = wb.Sheets[wb.SheetNames[0]];
+          const json = XLSX.utils.sheet_to_json(sheet, { defval: 'Sin Asignar' });
 
-          if (jsonData && jsonData.length > 0) {
-            globalData = jsonData;
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(globalData));
-            document.getElementById('statusMessage').innerText = `✓ ¡Éxito! Se cargaron ${globalData.length} registros desde el Excel.`;
-            renderizarTodo();
+          if (json && json.length > 0) {
+            rawData = json;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(rawData));
+            const status = document.getElementById('statusMessage');
+            status.className = "form-text mt-2 fw-semibold text-success";
+            status.innerText = `✓ ¡Éxito! Se cargaron ${rawData.length} grupos desde el Excel.`;
+            actualizarTodo();
           } else {
             alert('El archivo no contiene datos válidos.');
           }
@@ -396,100 +348,36 @@
       reader.readAsArrayBuffer(file);
     }
 
-    function renderizarTodo() {
-      renderizarTarjetas();
-      actualizarLinkPublico();
+    function limpiarDatos() {
+      if (confirm('¿Desea borrar la base de datos de la aplicación?')) {
+        localStorage.removeItem(STORAGE_KEY);
+        rawData = [];
+        document.getElementById('excelFile').value = '';
+        const status = document.getElementById('statusMessage');
+        status.className = "form-text mt-2 fw-semibold text-warning";
+        status.innerText = "Base de datos vacía.";
+        actualizarTodo();
+      }
     }
 
-    function renderizarTarjetas() {
-      const container = document.getElementById('publicDirectoryContainer');
+    function seleccionarTodos(estado) {
+      document.querySelectorAll('.chk-tipo').forEach(cb => cb.checked = estado);
+      actualizarTodo();
+    }
+
+    function actualizarTodo() {
+      renderizarVistaPrevia();
+      generarUrlPublica();
+    }
+
+    function renderizarVistaPrevia() {
+      const container = document.getElementById('directoryContainer');
       const counter = document.getElementById('recordCounter');
 
-      const checkboxes = document.querySelectorAll('.group-type-check:checked');
-      const seleccionados = Array.from(checkboxes).map(cb => limpiaTexto(cb.value));
+      const seleccionados = Array.from(document.querySelectorAll('.chk-tipo:checked'))
+                                 .map(cb => normalizar(cb.value));
 
-      if (seleccionados.length === 0) {
-        container.innerHTML = `
-          <div class="col-12 text-center py-5 text-warning">
-            <i class="bi bi-exclamation-triangle fs-1 d-block mb-2"></i>
-            <h5 class="fw-bold">No hay ninguna casilla seleccionada</h5>
-            <p class="mb-0">Por favor marque al menos una casilla arriba para mostrar el directorio.</p>
-          </div>`;
-        counter.innerText = "0 Grupos Seleccionados";
-        return;
-      }
-
-      // Filtrar por tipos elegidos
-      let filtrados = globalData.filter(item => {
-        const tipoOriginal = String(item['Tipo Grupo'] || '');
-        return seleccionados.includes(limpiaTexto(tipoOriginal));
-      });
-
-      // Ordenar según la opción seleccionada
-      const sortCriterion = document.getElementById('sortOrderSelect').value;
-      const diasOrden = { 'lunes': 1, 'martes': 2, 'miércoles': 3, 'miercoles': 3, 'jueves': 4, 'viernes': 5, 'sábado': 6, 'sabado': 6, 'domingo': 7 };
-
-      filtrados.sort((a, b) => {
-        if (sortCriterion === 'nombre') {
-          return String(a['Nombre'] || '').localeCompare(String(b['Nombre'] || ''));
-        } else if (sortCriterion === 'direccion') {
-          return String(a['Dirección'] || '').localeCompare(String(b['Dirección'] || ''));
-        } else if (sortCriterion === 'dia') {
-          const diaA = diasOrden[String(a['Día de Reunión'] || '').toLowerCase().trim()] || 99;
-          const diaB = diasOrden[String(b['Día de Reunión'] || '').toLowerCase().trim()] || 99;
-          return diaA - diaB;
-        }
-        return 0;
-      });
-
-      counter.innerText = `${filtrados.length} Grupos Encontrados`;
-
-      if (filtrados.length === 0) {
+      if (rawData.length === 0) {
         container.innerHTML = `
           <div class="col-12 text-center py-5 text-muted">
-            <i class="bi bi-search fs-1 d-block mb-2"></i>
-            <h5 class="fw-bold">Sin resultados</h5>
-            <p class="mb-0">No se encontraron registros para las categorías seleccionadas.</p>
-          </div>`;
-        return;
-      }
-
-      // Generar tarjetas limpias
-      let html = '';
-      filtrados.forEach(item => {
-        html += `
-          <div class="col-md-6 col-lg-4">
-            <div class="card card-custom group-card h-100 p-3 border-top border-4 border-primary">
-              <div class="d-flex justify-content-between align-items-start mb-2">
-                <h5 class="fw-bold text-primary mb-0">${escapeHtml(item['Nombre'] || 'Sin Nombre')}</h5>
-                <span class="badge badge-tipo text-white ms-2">${escapeHtml(item['Tipo Grupo'] || '')}</span>
-              </div>
-              <hr class="my-2 text-muted">
-              <div class="small">
-                <p class="mb-1"><span class="info-label"><i class="bi bi-person-badge-fill text-info me-1"></i>Encargados:</span> ${escapeHtml(item['Encargados'] || 'Sin Asignar')}</p>
-                <p class="mb-1"><span class="info-label"><i class="bi bi-calendar-event-fill text-primary me-1"></i>Día de Reunión:</span> ${escapeHtml(item['Día de Reunión'] || 'Sin Asignar')}</p>
-                <p class="mb-1"><span class="info-label"><i class="bi bi-clock-fill text-warning me-1"></i>Hora de Reunión:</span> ${escapeHtml(item['Hora de Reunión'] || 'Sin Asignar')}</p>
-                <p class="mb-1"><span class="info-label"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Dirección:</span> ${escapeHtml(item['Dirección'] || 'Sin Asignar')}</p>
-                <p class="mb-1"><span class="info-label"><i class="bi bi-telephone-fill text-success me-1"></i>Teléfono:</span> ${escapeHtml(item['Teléfono'] || 'Sin Asignar')}</p>
-                <p class="mb-1"><span class="info-label"><i class="bi bi-building me-1"></i>Sede:</span> ${escapeHtml(item['Sede'] || 'Sin Asignar')}</p>
-                <p class="mb-1"><span class="info-label"><i class="bi bi-people me-1"></i>Asistentes Directos:</span> ${escapeHtml(item['Cantidad Asistentes Directos'] || '0')}</p>
-                <p class="mb-0"><span class="info-label"><i class="bi bi-journal-check me-1"></i>Último Reporte:</span> ${escapeHtml(item['Fecha Ultimo Reporte'] || 'Sin Reporte')}</p>
-              </div>
-            </div>
-          </div>
-        `;
-      });
-
-      container.innerHTML = html;
-    }
-
-    function actualizarLinkPublico() {
-      const checkboxes = document.querySelectorAll('.group-type-check:checked');
-      const seleccionados = Array.from(checkboxes).map(cb => encodeURIComponent(cb.value));
-      const sortCriterion = document.getElementById('sortOrderSelect').value;
-
-      const urlBase = window.location.origin + window.location.pathname;
-      const inputLink = document.getElementById('publicLinkDisplay');
-
-      if (seleccionados.length > 0) {
-        inputLink.value = `${urlBase}?tipos=${seleccionados.join(',')}&orden=${sortCriterion}&vista=
+            <i class="bi bi-inbox fs-1 d-block
