@@ -8,7 +8,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-  <!-- SheetJS para lectura garantizada de archivos Excel y CSV -->
+  <!-- SheetJS para lectura de archivos Excel / CSV -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
   <style>
@@ -63,7 +63,7 @@
       padding: 12px 16px;
     }
 
-    /* MÁRGENES ESTRECHOS PARA OPTIMIZAR IMPRESIÓN Y PDF */
+    /* MÁRGENES ESTRECHOS ÚNICAMENTE PARA IMPRESIÓN Y PDF */
     @page {
       size: letter;
       margin: 0.8cm;
@@ -166,11 +166,11 @@
           <p class="text-muted small mb-2">Adjunte el archivo Excel (.xlsx, .xls) o CSV (.csv) con los datos de los grupos.</p>
           <div class="input-group">
             <input type="file" id="excelFile" class="form-control" accept=".xlsx, .xls, .csv" onchange="procesarArchivo(event)">
-            <button class="btn btn-outline-danger" type="button" onclick="restablecerPredeterminados()" title="Restablecer datos originales">
-              <i class="bi bi-arrow-counterclockwise"></i>
+            <button class="btn btn-outline-danger" type="button" onclick="limpiarDatos()" title="Limpiar datos">
+              <i class="bi bi-trash"></i>
             </button>
           </div>
-          <div id="statusMessage" class="form-text mt-2 fw-semibold text-success">✓ Base de datos cargada correctamente.</div>
+          <div id="statusMessage" class="form-text mt-2 fw-semibold"></div>
         </div>
       </div>
 
@@ -296,42 +296,18 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    const datosIniciales = [
-      {"Nombre":"CFV-H02 Iván Aguirre","Dirección":"SUBA - Prado Veraniego - Igleco 127 - Cra. 49 No. 127D 59 Salón 204","Teléfono":"3008550902","Día de Reunión":"Viernes","Hora de Reunión":"07:00 PM","Encargados":"Ivan Aguirre","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"13","Tipo Grupo":"CFV Hombres"},
-      {"Nombre":"CFV-I01 Alfonso Vega","Dirección":"SUBA - Victoria Norte - Calle 150 # 53- 32","Teléfono":"3112189679","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Alfonso Vega , Rosa De Vega","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"22","Tipo Grupo":"CFV Integral"},
-      {"Nombre":"CFV-I02 Oscar Ramírez","Dirección":"SUBA - Alhambra - Calle 114 A 47-35","Teléfono":"3164953932","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Oscar Ramírez , Mónica Bernal","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"8","Tipo Grupo":"CFV Integral"},
-      {"Nombre":"CFV-I03 Héctor Vargas","Dirección":"USAQUÉN - Cedritos - Calle 140 # 13- 58 Apto 201 Torre 2","Teléfono":"3015629166","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Héctor Vargas , Mónica Del Pilar Arciniegas","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"10","Tipo Grupo":"CFV Integral"},
-      {"Nombre":"CFV-I04 Mónica Rodríguez","Dirección":"SUBA - Prado Veraniego - Calle 131 A #49-16 Apto 402","Teléfono":"3203061614","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Mónica Rodríguez","Fecha Ultimo Reporte":"2026-09-25","Sede":"1","Cantidad Asistentes Directos":"11","Tipo Grupo":"CFV Integral"},
-      {"Nombre":"CFV-I05 Nelly Jiménez","Dirección":"SUBA - Suba Naranjos - Transversal 91 #130 A 41 Torre 13 Apto 502","Teléfono":"3202319208","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Nelly Jiménez","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"9","Tipo Grupo":"CFV Integral"},
-      {"Nombre":"CFV-I06 Jorge Parada","Dirección":"USAQUÉN - Cedritos - Calle 147 # 19-70 Apto 202 T 3","Teléfono":"3153363363","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Jorge Parada , Diana Marcela Gomez","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"18","Tipo Grupo":"CFV Integral"},
-      {"Nombre":"CFV-I07 María Tibasosa","Dirección":"SUBA - Prado Veraniego - Carrera 50 # 128 - 25 Apto 302","Teléfono":"3112282245","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Maria Tibasosa","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"15","Tipo Grupo":"CFV Integral"},
-      {"Nombre":"CFV-I08 Carmen Araque","Dirección":"USAQUÉN - San Cristóbal Norte - Carrera 8 B # 162- 31","Teléfono":"3108670138","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Carmen Araque","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"10","Tipo Grupo":"CFV Integral"},
-      {"Nombre":"CFV-I09 Carlos Arenas","Dirección":"SUBA - Mazurén - Calle 152 # 54- 35 Apto 404 T 2","Teléfono":"3102115160","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Carlos Arenas , Ruth Nery Veloza","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"12","Tipo Grupo":"CFV Integral"},
-      {"Nombre":"CFV-I10 Jorge Mesa","Dirección":"SUBA - Mazurén - Carrera 55 # 152- 30 Apto 204 T 2","Teléfono":"3134232338","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Jorge Mesa , Luz Mery De Mesa","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"14","Tipo Grupo":"CFV Integral"},
-      {"Nombre":"CFV-M01 Mónica Arciniegas","Dirección":"USAQUÉN - Cedritos - Calle 140 # 13- 58 Apto 201 Torre 2","Teléfono":"3015629166","Día de Reunión":"Martes","Hora de Reunión":"07:00 PM","Encargados":"Mónica Del Pilar Arciniegas","Fecha Ultimo Reporte":"2026-09-29","Sede":"1","Cantidad Asistentes Directos":"8","Tipo Grupo":"CFV Mujeres"},
-      {"Nombre":"CFV-M02 Mónica Bernal","Dirección":"SUBA - Alhambra - Calle 114 A 47-35","Teléfono":"3164953932","Día de Reunión":"Miércoles","Hora de Reunión":"07:00 PM","Encargados":"Mónica Bernal","Fecha Ultimo Reporte":"2026-09-30","Sede":"1","Cantidad Asistentes Directos":"7","Tipo Grupo":"CFV Mujeres"},
-      {"Nombre":"CFV-K01 Sandra Reyes","Dirección":"SUBA - Prado Veraniego - Calle 128 B # 46 - 45","Teléfono":"3138871230","Día de Reunión":"Sábado","Hora de Reunión":"10:00 AM","Encargados":"Sandra Reyes","Fecha Ultimo Reporte":"2026-10-03","Sede":"1","Cantidad Asistentes Directos":"15","Tipo Grupo":"CFV Kids"},
-      {"Nombre":"CFV-J01 Santiago Sandoval","Dirección":"SUBA - Prado Veraniego - Cra 49 # 127D-59 Salón 201","Teléfono":"3107865412","Día de Reunión":"Sábado","Hora de Reunión":"04:00 PM","Encargados":"Santiago Sandoval","Fecha Ultimo Reporte":"2026-10-03","Sede":"1","Cantidad Asistentes Directos":"18","Tipo Grupo":"CFV Juvenil"},
-      {"Nombre":"CFV-PJ01 Angie Bernal","Dirección":"SUBA - Prado Veraniego - Cra 49 # 127D-59 Salón 202","Teléfono":"3124567890","Día de Reunión":"Sábado","Hora de Reunión":"03:00 PM","Encargados":"Angie Bernal","Fecha Ultimo Reporte":"2026-10-03","Sede":"1","Cantidad Asistentes Directos":"12","Tipo Grupo":"CFV Pre-Juvenil"},
-      {"Nombre":"CFV-P01 Carlos Salas","Dirección":"SUBA - San José de Banderas - Calle 160 # 62-10","Teléfono":"3159876543","Día de Reunión":"Viernes","Hora de Reunión":"07:30 PM","Encargados":"Carlos Salas , Angie Aldana","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"16","Tipo Grupo":"CFV Parejas"},
-      {"Nombre":"CFV-RP01 Laurieth Palomino","Dirección":"SUBA - Prado Veraniego - Cra 49 # 127D-59 Salón 203","Teléfono":"3176543210","Día de Reunión":"Jueves","Hora de Reunión":"07:00 PM","Encargados":"Laurieth Palomino","Fecha Ultimo Reporte":"2026-10-01","Sede":"1","Cantidad Asistentes Directos":"14","Tipo Grupo":"CFV Red Pro"}
-    ];
-
     let rawData = [];
-    let publicModeData = null;
-    const STORAGE_KEY = 'cfv_directorio_db_v9';
+    const STORAGE_KEY = 'cfv_directorio_db_stable';
 
     window.onload = function() {
-      const fuePublico = revisarUrlPublica();
-      if (!fuePublico) {
-        cargarDatosAlmacenados();
-      }
+      revisarUrlPublica();
+      cargarDatosAlmacenados();
       actualizarTodo();
     };
 
     function revisarUrlPublica() {
       const params = new URLSearchParams(window.location.search);
-      const dataParam = params.get('data');
+      const tipos = params.get('tipos');
       const orden = params.get('orden');
       const vista = params.get('vista');
 
@@ -339,21 +315,18 @@
         document.getElementById('adminPanel').classList.add('d-none');
         document.getElementById('filterPanel').classList.add('d-none');
         document.getElementById('headerSubtitle').innerText = "Directorio Oficial de Grupos Familiares";
-
-        if (dataParam) {
-          try {
-            publicModeData = JSON.parse(decodeURIComponent(escape(atob(dataParam))));
-            rawData = publicModeData;
-          } catch(e) {
-            console.error("Error decodificando datos del enlace:", e);
-          }
-        }
-        if (orden) {
-          document.getElementById('selectOrden').value = orden;
-        }
-        return true;
       }
-      return false;
+
+      if (tipos) {
+        const listaTipos = tipos.split(',').map(t => decodeURIComponent(t).trim().toLowerCase());
+        document.querySelectorAll('.chk-tipo').forEach(cb => {
+          cb.checked = listaTipos.includes(cb.value.trim().toLowerCase());
+        });
+      }
+
+      if (orden) {
+        document.getElementById('selectOrden').value = orden;
+      }
     }
 
     function cargarDatosAlmacenados() {
@@ -364,4 +337,294 @@
         try {
           rawData = JSON.parse(guardado);
           if (status) {
-            status.className = "form-text mt-2 fw-semibold text-
+            status.className = "form-text mt-2 fw-semibold text-success";
+            status.innerText = `✓ Se cargaron ${rawData.length} grupos guardados.`;
+          }
+        } catch(e) {
+          rawData = [];
+        }
+      } else {
+        if (status) {
+          status.className = "form-text mt-2 fw-semibold text-warning";
+          status.innerText = "Suba el archivo Excel (.xlsx) o CSV (.csv) arriba para cargar los grupos.";
+        }
+      }
+    }
+
+    function procesarArchivo(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        try {
+          const data = new Uint8Array(evt.target.result);
+          const wb = XLSX.read(data, { type: 'array' });
+          const sheet = wb.Sheets[wb.SheetNames[0]];
+          const json = XLSX.utils.sheet_to_json(sheet, { defval: 'Sin Asignar' });
+
+          if (json && json.length > 0) {
+            rawData = json;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(rawData));
+            const status = document.getElementById('statusMessage');
+            status.className = "form-text mt-2 fw-semibold text-success";
+            status.innerText = `✓ ¡Éxito! Se cargaron ${rawData.length} grupos desde "${file.name}".`;
+            actualizarTodo();
+          } else {
+            alert('El archivo no contiene registros válidos.');
+          }
+        } catch (err) {
+          alert('Error al leer el archivo. Asegúrese de que es un archivo de Excel o CSV válido.');
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function limpiarDatos() {
+      if (confirm('¿Desea borrar la base de datos de la aplicación?')) {
+        localStorage.removeItem(STORAGE_KEY);
+        rawData = [];
+        document.getElementById('excelFile').value = '';
+        const status = document.getElementById('statusMessage');
+        status.className = "form-text mt-2 fw-semibold text-warning";
+        status.innerText = "Base de datos vacía.";
+        actualizarTodo();
+      }
+    }
+
+    function seleccionarTodos(estado) {
+      document.querySelectorAll('.chk-tipo').forEach(cb => {
+        cb.checked = estado;
+      });
+      actualizarTodo();
+    }
+
+    function actualizarTodo() {
+      renderizarVistaPrevia();
+      generarUrlPublica();
+    }
+
+    // Busca un valor en un objeto probando diferentes nombres de columna
+    function obtenerValor(item, posiblesClaves) {
+      for (let k of Object.keys(item)) {
+        const kLimpia = normalizar(k);
+        for (let p of posiblesClaves) {
+          if (kLimpia.includes(normalizar(p))) {
+            return item[k];
+          }
+        }
+      }
+      return 'Sin Asignar';
+    }
+
+    function renderizarVistaPrevia() {
+      const container = document.getElementById('directoryContainer');
+      const counter = document.getElementById('recordCounter');
+
+      const seleccionados = Array.from(document.querySelectorAll('.chk-tipo:checked'))
+                                 .map(cb => normalizar(cb.value));
+
+      if (rawData.length === 0) {
+        container.innerHTML = `
+          <div class="col-12 text-center py-5 text-muted">
+            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+            <h5 class="fw-bold">No hay datos en la aplicación</h5>
+            <p class="small">Adjunte su archivo Excel (.xlsx) o CSV (.csv) arriba para visualizar los grupos.</p>
+          </div>`;
+        counter.innerText = "0 Grupos";
+        return;
+      }
+
+      if (seleccionados.length === 0) {
+        container.innerHTML = `
+          <div class="col-12 text-center py-5 text-warning">
+            <i class="bi bi-exclamation-triangle fs-1 d-block mb-2"></i>
+            <h5 class="fw-bold">Sin tipos de grupo seleccionados</h5>
+            <p class="small">Marque al menos una casilla arriba o haga clic en <strong>"Marcar Todos"</strong>.</p>
+          </div>`;
+        counter.innerText = "0 Grupos";
+        return;
+      }
+
+      // Filtrar
+      let filtrados = rawData.filter(item => {
+        const tipoVal = obtenerValor(item, ['Tipo Grupo', 'Tipo', 'Tipo_Grupo']);
+        return seleccionados.includes(normalizar(tipoVal));
+      });
+
+      // Ordenar
+      const ordenVal = document.getElementById('selectOrden').value;
+      const mapaDias = { 'lunes': 1, 'martes': 2, 'miercoles': 3, 'miércoles': 3, 'jueves': 4, 'viernes': 5, 'sabado': 6, 'sábado': 6, 'domingo': 7 };
+
+      filtrados.sort((a, b) => {
+        const nomA = String(obtenerValor(a, ['Nombre']) || '');
+        const nomB = String(obtenerValor(b, ['Nombre']) || '');
+
+        if (ordenVal === 'nombre') {
+          return nomA.localeCompare(nomB, 'es', { sensitivity: 'base' });
+        } else if (ordenVal === 'direccion') {
+          const dirA = String(obtenerValor(a, ['Dirección', 'Direccion']) || '');
+          const dirB = String(obtenerValor(b, ['Dirección', 'Direccion']) || '');
+          return dirA.localeCompare(dirB, 'es', { sensitivity: 'base' });
+        } else if (ordenVal === 'dia') {
+          const diaAStr = limpiaSignos(obtenerValor(a, ['Día de Reunión', 'Dia de Reunion', 'Día', 'Dia']));
+          const diaBStr = limpiaSignos(obtenerValor(b treaty = ['Día de Reunión', 'Dia de Reunion', 'Día', 'Dia']));
+          
+          const dA = mapaDias[diaAStr] || 99;
+          const dB = mapaDias[diaBStr] || 99;
+
+          if (dA !== dB) return dA - dB;
+          return nomA.localeCompare(nomB, 'es', { sensitivity: 'base' });
+        }
+        return 0;
+      });
+
+      counter.innerText = `${filtrados.length} Grupos Encontrados`;
+
+      if (filtrados.length === 0) {
+        container.innerHTML = `
+          <div class="col-12 text-center py-5 text-muted">
+            <i class="bi bi-search fs-1 d-block mb-2"></i>
+            <h5 class="fw-bold">Sin coincidencias</h5>
+            <p class="small">No existen grupos cargados para los tipos seleccionados.</p>
+          </div>`;
+        return;
+      }
+
+      // Renderizar tarjetas
+      let html = '';
+      filtrados.forEach(item => {
+        const nombre = obtenerValor(item, ['Nombre']);
+        const tipo = obtenerValor(item, ['Tipo Grupo', 'Tipo']);
+        const encargados = obtenerValor(item, ['Encargados', 'Encargado']);
+        const dia = obtenerValor(item, ['Día de Reunión', 'Dia de Reunion', 'Día']);
+        const hora = obtenerValor(item, ['Hora de Reunión', 'Hora de Reunion', 'Hora']);
+        const direccion = obtenerValor(item, ['Dirección', 'Direccion']);
+        const telefono = obtenerValor(item, ['Teléfono', 'Telefono']);
+        const sede = obtenerValor(item, ['Sede']);
+        const asistentes = obtenerValor(item, ['Cantidad Asistentes Directos', 'Asistentes']);
+        const ultimoReporte = obtenerValor(item, ['Fecha Ultimo Reporte', 'Ultimo Reporte', 'Reporte']);
+
+        html += `
+          <div class="col-md-6 col-lg-4">
+            <div class="card card-custom group-card h-100 p-3 border-top border-4 border-primary">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <h5 class="fw-bold text-primary mb-0">${escapar(nombre)}</h5>
+                <span class="badge badge-tipo text-white ms-2">${escapar(tipo)}</span>
+              </div>
+              <hr class="my-2 text-muted">
+              <div class="small">
+                <p class="mb-1"><span class="info-label"><i class="bi bi-person-badge-fill text-info me-1"></i>Encargados:</span> ${escapar(encargados)}</p>
+                <p class="mb-1"><span class="info-label"><i class="bi bi-calendar-event-fill text-primary me-1"></i>Día de Reunión:</span> ${escapar(dia)}</p>
+                <p class="mb-1"><span class="info-label"><i class="bi bi-clock-fill text-warning me-1"></i>Hora de Reunión:</span> ${escapar(hora)}</p>
+                <p class="mb-1"><span class="info-label"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Dirección:</span> ${escapar(direccion)}</p>
+                <p class="mb-1"><span class="info-label"><i class="bi bi-telephone-fill text-success me-1"></i>Teléfono:</span> ${escapar(telefono)}</p>
+                <p class="mb-1"><span class="info-label"><i class="bi bi-building me-1"></i>Sede:</span> ${escapar(sede)}</p>
+                <p class="mb-1"><span class="info-label"><i class="bi bi-people me-1"></i>Asistentes Directos:</span> ${escapar(asistentes)}</p>
+                <p class="mb-0"><span class="info-label"><i class="bi bi-journal-check me-1"></i>Último Reporte:</span> ${escapar(ultimoReporte)}</p>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function generarUrlPublica() {
+      const elegidos = Array.from(document.querySelectorAll('.chk-tipo:checked'))
+                            .map(cb => encodeURIComponent(cb.value));
+      const ordenVal = document.getElementById('selectOrden').value;
+      const base = window.location.origin + window.location.pathname;
+      const input = document.getElementById('publicLinkInput');
+
+      if (elegidos.length > 0) {
+        input.value = `${base}?tipos=${elegidos.join(',')}&orden=${ordenVal}&vista=publica`;
+      } else {
+        input.value = `${base}?orden=${ordenVal}&vista=publica`;
+      }
+    }
+
+    function copiarLinkPublico() {
+      const input = document.getElementById('publicLinkInput');
+      input.select();
+      navigator.clipboard.writeText(input.value).then(() => {
+        const copyAlert = document.getElementById('copyAlert');
+        copyAlert.classList.remove('d-none');
+        setTimeout(() => copyAlert.classList.add('d-none'), 2500);
+      });
+    }
+
+    function imprimirDirectorio() {
+      const seleccionados = Array.from(document.querySelectorAll('.chk-tipo:checked'))
+                                 .map(cb => normalizar(cb.value));
+
+      if (seleccionados.length === 0 || rawData.length === 0) {
+        alert('Cargue datos y seleccione al menos un tipo de grupo para imprimir.');
+        return;
+      }
+
+      const area = document.getElementById('printArea');
+      area.innerHTML = '';
+
+      let printHtml = `
+        <div class="print-header">
+          <h2>DIRECTORIO DE GRUPOS FAMILIARES CFV</h2>
+          <p>Fecha de Informe: ${new Date().toLocaleDateString('es-CO')}</p>
+        </div>
+      `;
+
+      const tiposUnicos = Array.from(document.querySelectorAll('.chk-tipo:checked')).map(cb => cb.value);
+
+      tiposUnicos.forEach((tipo, index) => {
+        const grupos = rawData.filter(item => {
+          const tVal = obtenerValor(item, ['Tipo Grupo', 'Tipo']);
+          return normalizar(tVal) === normalizar(tipo);
+        });
+
+        if (grupos.length > 0) {
+          if (index > 0) printHtml += `<div class="page-break"></div>`;
+
+          printHtml += `
+            <div class="categoria-titulo">Categoría: ${tipo} (${grupos.length} Grupos)</div>
+            <table class="table-print">
+              <thead>
+                <tr>
+                  <th style="width: 22%;">Nombre</th>
+                  <th style="width: 25%;">Encargados</th>
+                  <th style="width: 15%;">Día y Hora</th>
+                  <th style="width: 26%;">Dirección</th>
+                  <th style="width: 12%;">Teléfono</th>
+                </tr>
+              </thead>
+              <tbody>
+          `;
+
+          grupos.forEach(g => {
+            const nom = obtenerValor(g, ['Nombre']);
+            const enc = obtenerValor(g, ['Encargados', 'Encargado']);
+            const dia = obtenerValor(g, ['Día de Reunión', 'Dia de Reunion', 'Día']);
+            const hor = obtenerValor(g, ['Hora de Reunión', 'Hora de Reunion', 'Hora']);
+            const dir = obtenerValor(g, ['Dirección', 'Direccion']);
+            const tel = obtenerValor(g, ['Teléfono', 'Telefono']);
+
+            printHtml += `
+              <tr>
+                <td><strong>${escapar(nom)}</strong></td>
+                <td>${escapar(enc)}</td>
+                <td>${escapar(dia)}<br><small>${escapar(hor)}</small></td>
+                <td>${escapar(dir)}</td>
+                <td>${escapar(tel)}</td>
+              </tr>
+            `;
+          });
+
+          printHtml += `</tbody></table>`;
+        }
+      });
+
+      area.innerHTML = printHtml;
+      setTimeout(() => { window.print(); }, 300);
+    }
+
+    function
