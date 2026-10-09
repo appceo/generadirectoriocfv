@@ -8,7 +8,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-  <!-- SheetJS para lectura de archivos Excel / CSV -->
+  <!-- SheetJS para lectura garantizada de archivos Excel y CSV -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
   <style>
@@ -63,10 +63,10 @@
       padding: 12px 16px;
     }
 
-    /* ESTILOS Y MÁRGENES ESTRECHOS PARA IMPRESIÓN IMPRIMIBLE / PDF */
+    /* MÁRGENES ESTRECHOS PARA OPTIMIZAR IMPRESIÓN Y PDF */
     @page {
       size: letter;
-      margin: 0.8cm 0.8cm 0.8cm 0.8cm;
+      margin: 0.8cm;
     }
 
     @media print {
@@ -319,7 +319,7 @@
 
     let rawData = [];
     let publicModeData = null;
-    const STORAGE_KEY = 'cfv_directorio_db_v8';
+    const STORAGE_KEY = 'cfv_directorio_db_v9';
 
     window.onload = function() {
       const fuePublico = revisarUrlPublica();
@@ -345,7 +345,7 @@
             publicModeData = JSON.parse(decodeURIComponent(escape(atob(dataParam))));
             rawData = publicModeData;
           } catch(e) {
-            console.error("Error decodificando datos:", e);
+            console.error("Error decodificando datos del enlace:", e);
           }
         }
         if (orden) {
@@ -364,247 +364,4 @@
         try {
           rawData = JSON.parse(guardado);
           if (status) {
-            status.className = "form-text mt-2 fw-semibold text-success";
-            status.innerText = `✓ Se cargaron ${rawData.length} grupos desde la memoria local.`;
-          }
-        } catch(e) {
-          rawData = datosIniciales;
-        }
-      } else {
-        rawData = datosIniciales;
-        if (status) {
-          status.className = "form-text mt-2 fw-semibold text-success";
-          status.innerText = `✓ Base de datos por defecto cargada (${rawData.length} grupos).`;
-        }
-      }
-    }
-
-    function procesarArchivo(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      const fileName = file.name.toLowerCase();
-
-      if (fileName.endsWith('.csv')) {
-        const reader = new FileReader();
-        reader.onload = function(evt) {
-          try {
-            let buffer = evt.target.result;
-            let decoder = new TextDecoder('windows-1252');
-            let text = decoder.decode(buffer);
-
-            if (!text.includes('') && text.includes('Ã')) {
-              decoder = new TextDecoder('utf-8');
-              text = decoder.decode(buffer);
-            }
-
-            const parsedJson = parsearCSV(text);
-            if (parsedJson && parsedJson.length > 0) {
-              rawData = parsedJson;
-              localStorage.setItem(STORAGE_KEY, JSON.stringify(rawData));
-              mostrarExitoCarga(rawData.length, file.name);
-            } else {
-              alert('El archivo CSV no contiene datos válidos.');
-            }
-          } catch(err) {
-            alert('Error al leer el archivo CSV.');
-          }
-        };
-        reader.readAsArrayBuffer(file);
-      } else {
-        const reader = new FileReader();
-        reader.onload = function(evt) {
-          try {
-            const data = new Uint8Array(evt.target.result);
-            const wb = XLSX.read(data, { type: 'array' });
-            const sheet = wb.Sheets[wb.SheetNames[0]];
-            const json = XLSX.utils.sheet_to_json(sheet, { defval: 'Sin Asignar' });
-
-            if (json && json.length > 0) {
-              rawData = json;
-              localStorage.setItem(STORAGE_KEY, JSON.stringify(rawData));
-              mostrarExitoCarga(rawData.length, file.name);
-            } else {
-              alert('El archivo Excel no contiene registros válidos.');
-            }
-          } catch (err) {
-            alert('Error al procesar el archivo Excel.');
-          }
-        };
-        reader.readAsArrayBuffer(file);
-      }
-    }
-
-    function mostrarExitoCarga(cant, nombre) {
-      const status = document.getElementById('statusMessage');
-      status.className = "form-text mt-2 fw-semibold text-success";
-      status.innerText = `✓ ¡Éxito! Se cargaron ${cant} grupos desde "${nombre}".`;
-      actualizarTodo();
-    }
-
-    function parsearCSV(text) {
-      const lines = text.split(/\r\n|\n/).filter(line => line.trim() !== '');
-      if (lines.length < 2) return [];
-
-      const delim = lines[0].includes(';') ? ';' : ',';
-      const headers = lines[0].split(delim).map(h => h.replace(/^["']|["']$/g, '').trim());
-
-      const result = [];
-      for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(delim).map(v => v.replace(/^["']|["']$/g, '').trim());
-        if (values.length === headers.length) {
-          const row = {};
-          headers.forEach((h, idx) => {
-            row[h] = values[idx] || 'Sin Asignar';
-          });
-          result.push(row);
-        }
-      }
-      return result;
-    }
-
-    function restablecerPredeterminados() {
-      if (confirm('¿Desea restablecer los datos a la versión inicial?')) {
-        localStorage.removeItem(STORAGE_KEY);
-        rawData = datosIniciales;
-        document.getElementById('excelFile').value = '';
-        const status = document.getElementById('statusMessage');
-        status.className = "form-text mt-2 fw-semibold text-success";
-        status.innerText = "✓ Datos restablecidos a la versión inicial.";
-        actualizarTodo();
-      }
-    }
-
-    function seleccionarTodos(estado) {
-      document.querySelectorAll('.chk-tipo').forEach(cb => cb.checked = estado);
-      actualizarTodo();
-    }
-
-    function actualizarTodo() {
-      const filtradosActuales = obtenerGruposFiltradosYOrdenados();
-      renderizarVistaPrevia(filtradosActuales);
-      generarUrlPublica(filtradosActuales);
-    }
-
-    function obtenerGruposFiltradosYOrdenados() {
-      if (publicModeData) {
-        return publicModeData;
-      }
-
-      const seleccionados = Array.from(document.querySelectorAll('.chk-tipo:checked'))
-                                 .map(cb => normalizar(cb.value));
-
-      if (rawData.length === 0 || seleccionados.length === 0) {
-        return [];
-      }
-
-      let filtrados = rawData.filter(item => {
-        const nombreVal = String(item['Nombre'] || '').trim();
-        const esNombreCFV = nombreVal.toUpperCase().startsWith('CFV-');
-        const tipoLimpio = normalizar(item['Tipo Grupo'] || '');
-        const esTipoSeleccionado = seleccionados.includes(tipoLimpio);
-
-        return esNombreCFV && esTipoSeleccionado;
-      });
-
-      const ordenVal = document.getElementById('selectOrden').value;
-      const mapaDias = { 
-        'lunes': 1, 'martes': 2, 'miercoles': 3, 'miércoles': 3, 
-        'jueves': 4, 'viernes': 5, 'sabado': 6, 'sábado': 6, 'domingo': 7 
-      };
-
-      filtrados.sort((a, b) => {
-        if (ordenVal === 'nombre') {
-          return String(a['Nombre'] || '').localeCompare(String(b['Nombre'] || ''), 'es', { sensitivity: 'base' });
-        } else if (ordenVal === 'direccion') {
-          return String(a['Dirección'] || a['Direccion'] || '').localeCompare(String(b['Dirección'] || b['Direccion'] || ''), 'es', { sensitivity: 'base' });
-        } else if (ordenVal === 'dia') {
-          const diaAStr = limpiaSignos(a['Día de Reunión'] || a['Dia de Reunion'] || '');
-          const diaBStr = limpiaSignos(b['Día de Reunión'] || b['Dia de Reunion'] || '');
-          
-          const dA = mapaDias[diaAStr] || 99;
-          const dB = mapaDias[diaBStr] || 99;
-
-          if (dA !== dB) {
-            return dA - dB;
-          }
-          return String(a['Nombre'] || '').localeCompare(String(b['Nombre'] || ''), 'es', { sensitivity: 'base' });
-        }
-        return 0;
-      });
-
-      return filtrados;
-    }
-
-    function renderizarVistaPrevia(filtrados) {
-      const container = document.getElementById('directoryContainer');
-      const counter = document.getElementById('recordCounter');
-
-      counter.innerText = `${filtrados.length} Grupos Encontrados`;
-
-      if (filtrados.length === 0) {
-        container.innerHTML = `
-          <div class="col-12 text-center py-5 text-warning">
-            <i class="bi bi-exclamation-triangle fs-1 d-block mb-2"></i>
-            <h5 class="fw-bold">No hay grupos seleccionados</h5>
-            <p class="small">Marque al menos un tipo de grupo arriba o cargue un archivo con registros válidos.</p>
-          </div>`;
-        return;
-      }
-
-      let html = '';
-      filtrados.forEach(item => {
-        const diaVal = item['Día de Reunión'] || item['Dia de Reunion'] || 'Sin Asignar';
-        const horaVal = item['Hora de Reunión'] || item['Hora de Reunion'] || 'Sin Asignar';
-
-        html += `
-          <div class="col-md-6 col-lg-4">
-            <div class="card card-custom group-card h-100 p-3 border-top border-4 border-primary">
-              <div class="d-flex justify-content-between align-items-start mb-2">
-                <h5 class="fw-bold text-primary mb-0">${escapar(item['Nombre'] || 'Sin Nombre')}</h5>
-                <span class="badge badge-tipo text-white ms-2">${escapar(item['Tipo Grupo'] || '')}</span>
-              </div>
-              <hr class="my-2 text-muted">
-              <div class="small">
-                <p class="mb-1"><span class="info-label"><i class="bi bi-person-badge-fill text-info me-1"></i>Encargados:</span> ${escapar(item['Encargados'] || 'Sin Asignar')}</p>
-                <p class="mb-1"><span class="info-label"><i class="bi bi-calendar-event-fill text-primary me-1"></i>Día de Reunión:</span> ${escapar(diaVal)}</p>
-                <p class="mb-1"><span class="info-label"><i class="bi bi-clock-fill text-warning me-1"></i>Hora de Reunión:</span> ${escapar(horaVal)}</p>
-                <p class="mb-1"><span class="info-label"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Dirección:</span> ${escapar(item['Dirección'] || item['Direccion'] || 'Sin Asignar')}</p>
-                <p class="mb-1"><span class="info-label"><i class="bi bi-telephone-fill text-success me-1"></i>Teléfono:</span> ${escapar(item['Teléfono'] || item['Telefono'] || 'Sin Asignar')}</p>
-                <p class="mb-1"><span class="info-label"><i class="bi bi-building me-1"></i>Sede:</span> ${escapar(item['Sede'] || 'Sin Asignar')}</p>
-                <p class="mb-1"><span class="info-label"><i class="bi bi-people me-1"></i>Asistentes Directos:</span> ${escapar(item['Cantidad Asistentes Directos'] || '0')}</p>
-                <p class="mb-0"><span class="info-label"><i class="bi bi-journal-check me-1"></i>Último Reporte:</span> ${escapar(item['Fecha Ultimo Reporte'] || 'Sin Reporte')}</p>
-              </div>
-            </div>
-          </div>
-        `;
-      });
-
-      container.innerHTML = html;
-    }
-
-    function generarUrlPublica(filtradosActuales) {
-      const ordenVal = document.getElementById('selectOrden').value;
-      const base = window.location.origin + window.location.pathname;
-      const input = document.getElementById('publicLinkInput');
-
-      if (filtradosActuales && filtradosActuales.length > 0) {
-        const jsonStr = JSON.stringify(filtradosActuales);
-        const encodedData = btoa(unescape(encodeURIComponent(jsonStr)));
-        input.value = `${base}?data=${encodedData}&orden=${ordenVal}&vista=publica`;
-      } else {
-        input.value = `${base}?vista=publica`;
-      }
-    }
-
-    function copiarLinkPublico() {
-      const input = document.getElementById('publicLinkInput');
-      input.select();
-      navigator.clipboard.writeText(input.value).then(() => {
-        const copyAlert = document.getElementById('copyAlert');
-        copyAlert.classList.remove('d-none');
-        setTimeout(() => copyAlert.classList.add('d-none'), 2500);
-      });
-    }
-
-    function imprimir
+            status.className = "form-text mt-2 fw-semibold text-
