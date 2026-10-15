@@ -3,390 +3,667 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistema Gestor de Base de Datos - IGLECAM</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <!-- SheetJS para la exportación a Excel -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-</head>
-<body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen pb-12">
+  <title>Directorio de Grupos Familiares CFV</title>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <!-- SheetJS para lectura de archivos Excel / CSV -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-  <!-- BARRA SUPERIOR / HEADER -->
-  <header class="bg-indigo-950 text-white px-6 py-4 shadow-lg flex flex-wrap justify-between items-center gap-4">
-    <div class="flex items-center space-x-3">
-      <div class="bg-indigo-600 p-2.5 rounded-xl shadow-inner">
-        <i data-lucide="users" class="w-7 h-7 text-white"></i>
-      </div>
-      <div>
-        <h1 class="text-xl font-bold tracking-wide">Asociación Ministerial IGLECAM</h1>
-        <p class="text-xs text-indigo-200">Sistema Gestor de Base de Datos de Miembros</p>
-      </div>
-    </div>
-    <div class="flex items-center space-x-3">
-      <button onclick="abrirModalNuevo()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-md transition-all">
-        <i data-lucide="user-plus" class="w-4 h-4"></i>
-        <span>+ Nuevo Registro</span>
-      </button>
+  <style>
+    :root {
+      --primary-color: #1a365d;
+      --accent-color: #2b6cb0;
+      --bg-light: #f7fafc;
+    }
+
+    body {
+      background-color: var(--bg-light);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #2d3748;
+    }
+
+    .header-banner {
+      background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+      color: white;
+      padding: 1.8rem 0;
+      margin-bottom: 1.5rem;
+      border-bottom: 4px solid #ecc94b;
+    }
+
+    .card-custom {
+      border: none;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+    .group-card {
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .group-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+
+    .badge-tipo {
+      background-color: var(--accent-color);
+      font-size: 0.85rem;
+    }
+
+    .info-label {
+      font-weight: 600;
+      color: #4a5568;
+    }
+
+    .checkbox-box {
+      background-color: #edf2f7;
+      border-radius: 8px;
+      padding: 12px 16px;
+    }
+
+    /* MÁRGENES ESTRECHOS Y OPTIMIZACIÓN A LO ANCHO PARA IMPRESIÓN / PDF */
+    @page {
+      size: letter;
+      margin: 0.6cm;
+    }
+
+    @media print {
+      html, body {
+        background-color: white !important;
+        color: black !important;
+        font-size: 8.5pt !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+      }
+
+      .no-print {
+        display: none !important;
+      }
+
+      .print-only {
+        display: block !important;
+        width: 100% !important;
+      }
+
+      .page-break {
+        page-break-before: always;
+      }
+
+      .table-print {
+        width: 100% !important;
+        border-collapse: collapse;
+        margin-top: 6px;
+      }
+
+      .table-print th, .table-print td {
+        border: 1px solid #718096 !important;
+        padding: 3px 5px !important;
+        text-align: left;
+        font-size: 8.5pt !important;
+        line-height: 1.15;
+      }
+
+      .table-print th {
+        background-color: #edf2f7 !important;
+        color: #1a202c !important;
+        font-weight: bold;
+        -webkit-print-color-adjust: exact;
+      }
+
+      .print-header {
+        text-align: center;
+        margin-bottom: 6px;
+        border-bottom: 2px solid #2b6cb0;
+        padding-bottom: 4px;
+      }
+    }
+
+    .print-only {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ENCABEZADO -->
+  <header class="header-banner no-print">
+    <div class="container text-center">
+      <h1 class="fw-bold mb-1"><i class="bi bi-people-fill me-2"></i>Directorio de Grupos CFV</h1>
+      <p class="lead mb-0 fs-6" id="headerSubtitle">Consulta y Directorio de Grupos Familiares CFV</p>
     </div>
   </header>
 
-  <main class="max-w-7xl mx-auto px-4 mt-6 space-y-6">
+  <div class="container mb-5">
 
-    <!-- RESUMEN DE REGISTROS -->
-    <section class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex justify-between items-center flex-wrap gap-4">
-      <div class="flex items-center space-x-4">
-        <div id="badgeTotal" class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-sm">
-          0
-        </div>
-        <div>
-          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Base de Datos Actual</span>
-          <p id="infoConteoBD" class="text-sm font-semibold text-slate-700">Cargando datos iniciales...</p>
-        </div>
-      </div>
-      <button onclick="restablecerBD()" class="text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg border border-slate-300 flex items-center gap-1.5 transition-all">
-        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
-        <span>Restablecer Datos de Fábrica</span>
-      </button>
-    </section>
-
-    <!-- CONSULTA Y FILTRO DE MIEMBROS -->
-    <section class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 space-y-4">
-      <div class="flex items-center space-x-2 text-indigo-900">
-        <i data-lucide="search" class="w-5 h-5 text-indigo-600"></i>
-        <h2 class="text-base font-bold">Consulta y Filtro de Miembros</h2>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-        <!-- Selector de Parámetro -->
-        <div class="md:col-span-4 space-y-1">
-          <label class="text-xs font-semibold text-slate-600 block">Criterio de Búsqueda:</label>
-          <select id="selectCriterio" onchange="alCambiarCriterio()" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all">
-            <option value="combinado">Nombres / Apellidos (Combinado)</option>
-            <option value="identificacion">Identificación</option>
-            <option value="apellidos">Apellidos</option>
-            <option value="nombres">Nombres</option>
-            <option value="telefono">Teléfono Móvil</option>
-            <option value="iglesia">Iglesia</option>
-            <option value="ciudadIglesia">Ciudad Iglesia</option>
-            <option value="direccionIglesia">Dirección Iglesia</option>
-          </select>
-        </div>
-
-        <!-- Campo de Entrada de Búsqueda -->
-        <div class="md:col-span-5 space-y-1">
-          <label id="lblBusqueda" class="text-xs font-semibold text-slate-600 block">Escriba Nombre y/o Apellido (ej: Pedro Hernández):</label>
-          <div class="relative">
-            <input type="text" id="inputBusqueda" placeholder="Ej: Rodriguez" class="w-full text-sm border border-slate-300 rounded-xl pl-3 pr-8 py-2 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all">
-            <button onclick="limpiarBuscador()" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600">
-              <i data-lucide="x-circle" class="w-4 h-4"></i>
+    <!-- PANEL ADMINISTRACIÓN -->
+    <div id="adminPanel" class="row g-3 mb-4 no-print">
+      <div class="col-md-7">
+        <div class="card card-custom p-3 h-100">
+          <h5 class="card-title text-primary"><i class="bi bi-file-earmark-spreadsheet me-2"></i>Cargar / Actualizar Archivo Excel o CSV</h5>
+          <p class="text-muted small mb-2">Adjunte el archivo Excel (.xlsx, .xls) o CSV (.csv) con los datos de los grupos.</p>
+          <div class="input-group">
+            <input type="file" id="excelFile" class="form-control" accept=".xlsx, .xls, .csv" onchange="procesarArchivo(event)">
+            <button class="btn btn-outline-danger" type="button" onclick="restablecerPredeterminados()" title="Restablecer datos originales">
+              <i class="bi bi-arrow-counterclockwise"></i>
             </button>
           </div>
+          <div id="statusMessage" class="form-text mt-2 fw-semibold text-success">✓ Base de datos cargada correctamente.</div>
         </div>
+      </div>
 
-        <!-- Botones de Acción para Filtro -->
-        <div class="md:col-span-3 flex items-center space-x-2">
-          <button onclick="ejecutarFiltro()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm py-2 px-4 rounded-xl flex items-center justify-center gap-2 shadow-md transition-all">
-            <i data-lucide="filter" class="w-4 h-4"></i>
-            <span>Filtrar</span>
+      <div class="col-md-5">
+        <div class="card card-custom p-3 h-100 d-flex flex-column justify-content-between">
+          <div>
+            <h5 class="card-title text-primary"><i class="bi bi-printer me-2"></i>Imprimir Reporte PDF</h5>
+            <p class="text-muted small mb-2">Imprima un informe profesional con los grupos seleccionados.</p>
+          </div>
+          <button class="btn btn-success w-100 fw-bold" onclick="imprimirDirectorio()">
+            <i class="bi bi-printer-fill me-2"></i> Imprimir Selección Actual
           </button>
-          <button onclick="exportarExcelFiltrado()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm py-2 px-3.5 rounded-xl flex items-center justify-center gap-1 shadow-md transition-all">
-            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
-            <span>Excel</span>
-          </button>
         </div>
       </div>
-    </section>
-
-    <!-- SECCIÓN DE DESCARGA GLOBAL CON ORDENAMIENTO PREVIO -->
-    <section class="bg-indigo-50/60 rounded-2xl p-4 border border-indigo-100 flex justify-between items-center flex-wrap gap-4">
-      <div class="flex items-center space-x-3">
-        <div class="bg-indigo-600 text-white p-2.5 rounded-xl">
-          <i data-lucide="download" class="w-5 h-5"></i>
-        </div>
-        <div>
-          <h3 class="text-sm font-bold text-indigo-950">Descargar Toda la Base de Datos</h3>
-          <p class="text-xs text-indigo-600">Exporta la totalidad de miembros a un archivo Excel (.xlsx) previamente ordenados.</p>
-        </div>
-      </div>
-      <div class="flex items-center space-x-3">
-        <span class="text-xs font-semibold text-slate-600">Ordenar por:</span>
-        <select id="selectOrden" class="text-xs border border-slate-300 rounded-xl px-3 py-2 bg-white text-slate-700">
-          <option value="apellido">Primer Apellido (A-Z)</option>
-          <option value="ciudad">Ciudad Iglesia (A-Z)</option>
-        </select>
-        <button onclick="descargarTodaBD()" class="bg-indigo-900 hover:bg-indigo-950 text-white text-xs font-semibold px-4 py-2 rounded-xl flex items-center gap-2 shadow transition-all">
-          <i data-lucide="file-output" class="w-4 h-4"></i>
-          <span>Descargar Toda la BD (.xlsx)</span>
-        </button>
-      </div>
-    </section>
-
-    <!-- TABLA DE RESULTADOS -->
-    <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden space-y-4">
-      <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-        <span id="lblContador" class="text-xs font-bold text-slate-600">Mostrando 0 de 0 registros</span>
-        <button id="btnEditar" onclick="abrirModalEdicion()" disabled class="bg-amber-400 opacity-50 cursor-not-allowed text-amber-950 text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition-all shadow-sm">
-          <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
-          <span>Editar Registro Seleccionado</span>
-        </button>
-      </div>
-
-      <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse text-xs">
-          <thead>
-            <tr class="bg-slate-100 text-slate-600 uppercase font-bold border-b border-slate-200 tracking-wider">
-              <th class="p-3 text-center">Sel.</th>
-              <th class="p-3">Identificación</th>
-              <th class="p-3">Nombres</th>
-              <th class="p-3">Apellidos</th>
-              <th class="p-3">Edad</th>
-              <th class="p-3">Teléfono Móvil</th>
-              <th class="p-3">E-Mail</th>
-              <th class="p-3">Estado Civil</th>
-              <th class="p-3">Iglesia</th>
-              <th class="p-3">Ciudad Iglesia</th>
-              <th class="p-3">Dirección Iglesia</th>
-            </tr>
-          </thead>
-          <tbody id="tablaCuerpo" class="divide-y divide-slate-200">
-            <!-- Filas inyectadas por JS -->
-          </tbody>
-        </table>
-      </div>
-
-      <!-- MENSAJE SIN RESULTADOS -->
-      <div id="divSinResultados" class="hidden py-12 text-center space-y-2">
-        <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-400">
-          <i data-lucide="folder-search" class="w-6 h-6"></i>
-        </div>
-        <p class="text-xs font-semibold text-slate-400">No se encontraron registros coincidentes.</p>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- MODAL / FORMULARIO PARA CREAR O EDITAR REGISTRO -->
-  <div id="modalFormulario" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
-      <div class="bg-indigo-950 text-white p-4 flex justify-between items-center">
-        <h3 id="modalTitulo" class="text-sm font-bold flex items-center gap-2">
-          <i data-lucide="user-check" class="w-4 h-4"></i>
-          <span>Editar Registro de Miembro</span>
-        </h3>
-        <button onclick="cerrarModal()" class="text-slate-300 hover:text-white">
-          <i data-lucide="x" class="w-5 h-5"></i>
-        </button>
-      </div>
-
-      <form id="formMiembro" onsubmit="guardarRegistro(event)" class="p-6 overflow-y-auto space-y-4 text-xs">
-        <input type="hidden" id="formIndexOriginal" value="-1">
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="font-bold text-slate-700 block mb-1">Identificación (*):</label>
-            <input type="text" id="fieldIdentificacion" required class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-          </div>
-          <div>
-            <label class="font-bold text-slate-700 block mb-1">Edad:</label>
-            <input type="text" id="fieldEdad" placeholder="Ej: 35 Años" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-          </div>
-          <div>
-            <label class="font-bold text-slate-700 block mb-1">Primer Nombre (*):</label>
-            <input type="text" id="fieldPrimerNombre" required class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-          </div>
-          <div>
-            <label class="font-bold text-slate-700 block mb-1">Segundo Nombre:</label>
-            <input type="text" id="fieldSegundoNombre" placeholder="Sin Información" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-          </div>
-          <div>
-            <label class="font-bold text-slate-700 block mb-1">Primer Apellido (*):</label>
-            <input type="text" id="fieldPrimerApellido" required class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-          </div>
-          <div>
-            <label class="font-bold text-slate-700 block mb-1">Segundo Apellido:</label>
-            <input type="text" id="fieldSegundoApellido" placeholder="Sin Información" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-          </div>
-          <div>
-            <label class="font-bold text-slate-700 block mb-1">Teléfono Móvil:</label>
-            <input type="text" id="fieldTelefono" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-          </div>
-          <div>
-            <label class="font-bold text-slate-700 block mb-1">E-mail:</label>
-            <input type="email" id="fieldEmail" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-          </div>
-          <div>
-            <label class="font-bold text-slate-700 block mb-1">Estado Civil:</label>
-            <select id="fieldEstadoCivil" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
-              <option value="Soltero">Soltero</option>
-              <option value="Casado Por Ambas">Casado Por Ambas</option>
-              <option value="Casado Por La Iglesia">Casado Por La Iglesia</option>
-              <option value="Casado Por Lo Civil">Casado Por Lo Civil</option>
-              <option value="Divorciado">Divorciado</option>
-              <option value="Separado">Separado</option>
-              <option value="Viudo">Viudo</option>
-              <option value="Unión Libre">Unión Libre</option>
-            </select>
-          </div>
-          <div>
-            <label class="font-bold text-slate-700 block mb-1">Fecha Nacimiento:</label>
-            <input type="text" id="fieldFechaNacimiento" placeholder="DD/MM/AAAA" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-          </div>
-        </div>
-
-        <!-- Campos de Iglesia para Editar -->
-        <div class="bg-indigo-50/70 p-3 rounded-xl border border-indigo-100 space-y-3 mt-2">
-          <span class="font-bold text-indigo-900 block text-xs">Datos Ministeriales (Editables)</span>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div>
-              <label class="font-semibold text-slate-600 block mb-1">Iglesia:</label>
-              <input type="text" id="fieldIglesia" placeholder="Ej: Igleco 127" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
-            </div>
-            <div>
-              <label class="font-semibold text-slate-600 block mb-1">Ciudad Iglesia:</label>
-              <input type="text" id="fieldCiudadIglesia" placeholder="Ej: Bogotá" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
-            </div>
-            <div>
-              <label class="font-semibold text-slate-600 block mb-1">Dirección Iglesia:</label>
-              <input type="text" id="fieldDireccionIglesia" placeholder="Ej: Cra. 49 #127D-59" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
-            </div>
-          </div>
-        </div>
-
-        <div class="flex justify-end space-x-2 pt-2 border-t border-slate-200">
-          <button type="button" onclick="cerrarModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 rounded-xl text-slate-700 font-semibold">Cancelar</button>
-          <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold shadow-md">Guardar Cambios</button>
-        </div>
-      </form>
     </div>
+
+    <!-- FILTROS Y CONTROLES -->
+    <div id="filterPanel" class="card card-custom p-4 no-print mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold text-primary mb-0"><i class="bi bi-check2-square me-2"></i>Seleccione Tipos de Grupo CFV:</h5>
+        <div>
+          <button type="button" class="btn btn-sm btn-primary me-2 fw-bold" onclick="seleccionarTodos(true)">Marcar Todos</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary fw-bold" onclick="seleccionarTodos(false)">Desmarcar Todos</button>
+        </div>
+      </div>
+
+      <div class="checkbox-box mb-3">
+        <div class="row g-2">
+          <div class="col-6 col-md-3">
+            <div class="form-check">
+              <input class="form-check-input chk-tipo" type="checkbox" value="CFV Pre-Juvenil" id="c1" checked onchange="actualizarTodo()">
+              <label class="form-check-label fw-semibold" for="c1">CFV Pre-Juvenil</label>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="form-check">
+              <input class="form-check-input chk-tipo" type="checkbox" value="CFV Juvenil" id="c2" checked onchange="actualizarTodo()">
+              <label class="form-check-label fw-semibold" for="c2">CFV Juvenil</label>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="form-check">
+              <input class="form-check-input chk-tipo" type="checkbox" value="CFV Red Pro" id="c3" checked onchange="actualizarTodo()">
+              <label class="form-check-label fw-semibold" for="c3">CFV Red Pro</label>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="form-check">
+              <input class="form-check-input chk-tipo" type="checkbox" value="CFV Hombres" id="c4" checked onchange="actualizarTodo()">
+              <label class="form-check-label fw-semibold" for="c4">CFV Hombres</label>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="form-check">
+              <input class="form-check-input chk-tipo" type="checkbox" value="CFV Mujeres" id="c5" checked onchange="actualizarTodo()">
+              <label class="form-check-label fw-semibold" for="c5">CFV Mujeres</label>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="form-check">
+              <input class="form-check-input chk-tipo" type="checkbox" value="CFV Parejas" id="c6" checked onchange="actualizarTodo()">
+              <label class="form-check-label fw-semibold" for="c6">CFV Parejas</label>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="form-check">
+              <input class="form-check-input chk-tipo" type="checkbox" value="CFV Integral" id="c7" checked onchange="actualizarTodo()">
+              <label class="form-check-label fw-semibold" for="c7">CFV Integral</label>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="form-check">
+              <input class="form-check-input chk-tipo" type="checkbox" value="CFV Kids" id="c8" checked onchange="actualizarTodo()">
+              <label class="form-check-label fw-semibold" for="c8">CFV Kids</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SELECTOR DE ORDENAMIENTO -->
+      <div class="row align-items-center mb-3">
+        <div class="col-md-6">
+          <label for="selectOrden" class="form-label fw-bold text-secondary mb-1">
+            <i class="bi bi-sort-down me-1"></i> Ordenar Vista Previa Por:
+          </label>
+          <select id="selectOrden" class="form-select border-primary fw-semibold" onchange="actualizarTodo()">
+            <option value="nombre" selected>Nombre del Grupo (A - Z)</option>
+            <option value="direccion">Dirección (A - Z)</option>
+            <option value="dia">Día de Realización (Lunes a Domingo)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- ENLACE PÚBLICO -->
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 pt-2 border-top">
+        <span class="text-muted small fw-semibold">Copie y comparta este enlace público limpio con los usuarios:</span>
+        <div class="d-flex gap-2 w-100 w-md-auto">
+          <input type="text" id="publicLinkInput" class="form-control form-control-sm" readonly style="max-width: 380px;">
+          <button type="button" class="btn btn-sm btn-primary fw-bold text-nowrap" onclick="copiarLinkPublico()">
+            <i class="bi bi-link-45deg me-1"></i> Copiar Enlace Público
+          </button>
+        </div>
+      </div>
+      <div id="copyAlert" class="text-success small fw-bold text-end mt-1 d-none">¡Enlace copiado al portapapeles!</div>
+    </div>
+
+    <!-- DIRECTORIO DE TARJETAS -->
+    <div class="card card-custom p-4 no-print">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 id="groupTitle" class="text-primary fw-bold mb-0">Directorio de Grupos</h4>
+        <span id="recordCounter" class="badge bg-primary fs-6">0 Grupos Encontrados</span>
+      </div>
+
+      <div id="directoryContainer" class="row g-3">
+        <!-- Tarjetas generadas dinámicamente -->
+      </div>
+    </div>
+
+    <!-- AREA IMPRESION -->
+    <div id="printArea" class="print-only"></div>
+
   </div>
 
-  <!-- LÓGICA DE APLICACIÓN EN JAVASCRIPT -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // =========================================================================
-    // DATOS DE LA TABLA "Base Iglecam.xlsx"
-    // =========================================================================
-    const datosInicialesExcel = [
-      {"Identificacion":"28822382","Edad":"21 Años","PrimerNombre":"Diana","SegundoNombre":"Sin Información","PrimerApellido":"Castro","SegundoApellido":"Sin Información","EstadoCivil":"Soltero","Telefono":"57","Email":"cdiana529@gmail.com","FechaNacimiento":"5/10/2005","Iglesia":"","CiudadIglesia":"","DireccionIglesia":""},
-      {"Identificacion":"1014227431","Edad":"34 Años","PrimerNombre":"Gian","SegundoNombre":"Carlos","PrimerApellido":"Jiménez","SegundoApellido":"Ramos","EstadoCivil":"Soltero","Telefono":"57","Email":"giancarlojimenez84@gmail.com","FechaNacimiento":"20/11/1991","Iglesia":"","CiudadIglesia":"","DireccionIglesia":""},
-      {"Identificacion":"19454490","Edad":"20 Años","PrimerNombre":"Alirio","SegundoNombre":"Sin Información","PrimerApellido":"Mahecha","SegundoApellido":"Acero","EstadoCivil":"Divorciado","Telefono":"57","Email":"alimahechacero@gmail.com","FechaNacimiento":"21/11/2005","Iglesia":"","CiudadIglesia":"","DireccionIglesia":""},
-      {"Identificacion":"1020736388","Edad":"37 Años","PrimerNombre":"Katherine","SegundoNombre":"Sin Información","PrimerApellido":"Said","SegundoApellido":"Fierro","EstadoCivil":"Casado Por Ambas","Telefono":"3002091933","Email":"katiesaidf@gmail.com","FechaNacimiento":"5/11/1988","Iglesia":"","CiudadIglesia":"","DireccionIglesia":""},
-      {"Identificacion":"51953184","Edad":"58 Años","PrimerNombre":"Sonia","SegundoNombre":"Liliana","PrimerApellido":"Oviedo","SegundoApellido":"Repizo","EstadoCivil":"Casado Por La Iglesia","Telefono":"3002141074","Email":"soliore68@gmail.com","FechaNacimiento":"21/07/1968","Iglesia":"","CiudadIglesia":"","DireccionIglesia":""},
-      {"Identificacion":"52804662","Edad":"45 Años","PrimerNombre":"Maryline","SegundoNombre":"Sin Información","PrimerApellido":"Palencia","SegundoApellido":"Contreras","EstadoCivil":"Casado Por Ambas","Telefono":"3002223407","Email":"marylinepalencia@gmail.com","FechaNacimiento":"03/09/1981","Iglesia":"","CiudadIglesia":"","DireccionIglesia":""},
-      {"Identificacion":"72224144","Edad":"50 Años","PrimerNombre":"Guillermo","SegundoNombre":"Sin Información","PrimerApellido":"Prieto","SegundoApellido":"Sin Información","EstadoCivil":"Casado Por Ambas","Telefono":"3002375930","Email":"jdfcguillermo.prieto@gmail.com","FechaNacimiento":"6/10/1976","Iglesia":"","CiudadIglesia":"","DireccionIglesia":""},
-      {"Identificacion":"80768536","Edad":"42 Años","PrimerNombre":"Jairo","SegundoNombre":"Andres","PrimerApellido":"Palacios","SegundoApellido":"Valderrama","EstadoCivil":"Casado Por Ambas","Telefono":"3003283987","Email":"jandresp31@gmail.com","FechaNacimiento":"31/08/1984","Iglesia":"","CiudadIglesia":"","DireccionIglesia":""},
-      {"Identificacion":"52716795","Edad":"44 Años","PrimerNombre":"Paola","SegundoNombre":"Andrea","PrimerApellido":"Parra","SegundoApellido":"Paniagua","EstadoCivil":"Casado Por Ambas","Telefono":"3003912643","Email":"polisaccesorios@hotmail.com","FechaNacimiento":"3/11/1981","Iglesia":"","CiudadIglesia":"","DireccionIglesia":""},
-      {"Identificacion":"80148671","Edad":"46 Años","PrimerNombre":"Francisco","SegundoNombre":"Javier","PrimerApellido":"Otero","SegundoApellido":"Perez","EstadoCivil":"Casado Por Ambas","Telefono":"3005394130","Email":"pastorpachootero@gmail.com","FechaNacimiento":"04/05/1980","Iglesia":"","CiudadIglesia":"","DireccionIglesia":""},
-      {"Identificacion":"51772053","Edad":"61 Años","PrimerNombre":"Patricia","SegundoNombre":"Sin Información","PrimerApellido":"Benavides","SegundoApellido":"Calvache","EstadoCivil":"Casado Por Ambas","Telefono":"3005516534","Email":"patybenca.1948@gmail.com","FechaNacimiento":"30/01/1965","Iglesia":"","CiudadIglesia":"","DireccionIglesia":""},
-      {"Identificacion":"11253286","Edad":"71 Años","PrimerNombre":"Luis","SegundoNombre":"Ernesto","PrimerApellido":"Triana","SegundoApellido":"Castro","EstadoCivil":"Casado Por Ambas","Telefono":"3005716107","Email":"le.tc@hotmail.com","FechaNacimiento":"13/09/1955","Iglesia":"","CiudadIglesia":"","DireccionIglesia":""},
-      {"Identificacion":"52917678","Edad":"20 Años","PrimerNombre":"Maira","SegundoNombre":"Alexandra","PrimerApellido":"Moncaleano","SegundoApellido":"Moncaleano","EstadoCivil":"Casado Por Lo Civil","Telefono":"3006595087","Email":"maalmo2@gmail.com","FechaNacimiento":"25/11/2005","Iglesia":"","CiudadIglesia":"","DireccionIglesia":""},
-      {"Identificacion":"4114248","Edad":"48 Años","PrimerNombre":"Jaime","SegundoNombre":"Humberto","PrimerApellido":"Ruiz","SegundoApellido":"Ussa","EstadoCivil":"Separado","Telefono":"3006796691","Email":"jaimehumbertoruizussa@gmail.com","FechaNacimiento":"15/09/1978","Iglesia":"","CiudadIglesia":"","DireccionIglesia":""},
-      {"Identificacion":"52966904","Edad":"42 Años","PrimerNombre":"Angelica","SegundoNombre":"Maria","PrimerApellido":"Gutiérrez","SegundoApellido":"Gutierrez","EstadoCivil":"Casado Por La Iglesia","Telefono":"3007037114","Email":"gelikvale24@hotmail.com","FechaNacimiento":"15/11/1983","Iglesia":"","CiudadIglesia":"","DireccionIglesia":""},
-      {"Identificacion":"51788411","Edad":"62 Años","PrimerNombre":"Yolanda","SegundoNombre":"Sin Información","PrimerApellido":"Castro","SegundoApellido":"Sin Información","EstadoCivil":"Divorciado","Telefono":"3007709650","Email":"yolandacastro.iam@gmail.com","FechaNacimiento":"14/10/1964","Iglesia":"","CiudadIglesia":"","DireccionIglesia":""},
-      {"Identificacion":"5935345","Edad":"59 Años","PrimerNombre":"Arcadio","SegundoNombre":"Sin Información","PrimerApellido":"Rodríguez","SegundoApellido":"Jiménez","EstadoCivil":"Casado Por Ambas","Telefono":"3015432406","Email":"arcadiorodriguezj@gmail.com","FechaNacimiento":"02/01/1967","Iglesia":"Igleco 127","CiudadIglesia":"Bogotá","DireccionIglesia":"Cra. 49 #127D-59"},
-      {"Identificacion":"1018436585","Edad":"36 Años","PrimerNombre":"Leidy","SegundoNombre":"Yurley","PrimerApellido":"López","SegundoApellido":"Rodríguez","EstadoCivil":"Soltero","Telefono":"3102234538","Email":"contaworld01@gmail.com","FechaNacimiento":"19/07/1990","Iglesia":"Igleco 76","CiudadIglesia":"Bogotá","DireccionIglesia":"Cl. 76 #20B-55"}
+    const datosIniciales = [
+      {"Nombre":"CFV-H02 Iván Aguirre","Dirección":"SUBA - Prado Veraniego - Igleco 127 - Cra. 49 No. 127D 59 Salón 204","Teléfono":"3008550902","Día de Reunión":"Viernes","Hora de Reunión":"07:00 PM","Encargados":"Ivan Aguirre","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"13","Tipo Grupo":"CFV Hombres"},
+      {"Nombre":"CFV-I01 Alfonso Vega","Dirección":"SUBA - Victoria Norte - Calle 150 # 53- 32","Teléfono":"3112189679","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Alfonso Vega , Rosa De Vega","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"22","Tipo Grupo":"CFV Integral"},
+      {"Nombre":"CFV-I02 Oscar Ramírez","Dirección":"SUBA - Alhambra - Calle 114 A 47-35","Teléfono":"3164953932","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Oscar Ramírez , Mónica Bernal","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"8","Tipo Grupo":"CFV Integral"},
+      {"Nombre":"CFV-I03 Héctor Vargas","Dirección":"USAQUÉN - Cedritos - Calle 140 # 13- 58 Apto 201 Torre 2","Teléfono":"3015629166","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Héctor Vargas , Mónica Del Pilar Arciniegas","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"10","Tipo Grupo":"CFV Integral"},
+      {"Nombre":"CFV-I04 Mónica Rodríguez","Dirección":"SUBA - Prado Veraniego - Calle 131 A #49-16 Apto 402","Teléfono":"3203061614","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Mónica Rodríguez","Fecha Ultimo Reporte":"2026-09-25","Sede":"1","Cantidad Asistentes Directos":"11","Tipo Grupo":"CFV Integral"},
+      {"Nombre":"CFV-I05 Nelly Jiménez","Dirección":"SUBA - Suba Naranjos - Transversal 91 #130 A 41 Torre 13 Apto 502","Teléfono":"3202319208","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Nelly Jiménez","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"9","Tipo Grupo":"CFV Integral"},
+      {"Nombre":"CFV-I06 Jorge Parada","Dirección":"USAQUÉN - Cedritos - Calle 147 # 19-70 Apto 202 T 3","Teléfono":"3153363363","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Jorge Parada , Diana Marcela Gomez","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"18","Tipo Grupo":"CFV Integral"},
+      {"Nombre":"CFV-I07 María Tibasosa","Dirección":"SUBA - Prado Veraniego - Carrera 50 # 128 - 25 Apto 302","Teléfono":"3112282245","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Maria Tibasosa","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"15","Tipo Grupo":"CFV Integral"},
+      {"Nombre":"CFV-I08 Carmen Araque","Dirección":"USAQUÉN - San Cristóbal Norte - Carrera 8 B # 162- 31","Teléfono":"3108670138","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Carmen Araque","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"10","Tipo Grupo":"CFV Integral"},
+      {"Nombre":"CFV-I09 Carlos Arenas","Dirección":"SUBA - Mazurén - Calle 152 # 54- 35 Apto 404 T 2","Teléfono":"3102115160","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Carlos Arenas , Ruth Nery Veloza","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"12","Tipo Grupo":"CFV Integral"},
+      {"Nombre":"CFV-I10 Jorge Mesa","Dirección":"SUBA - Mazurén - Carrera 55 # 152- 30 Apto 204 T 2","Teléfono":"3134232338","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Jorge Mesa , Luz Mery De Mesa","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"14","Tipo Grupo":"CFV Integral"},
+      {"Nombre":"CFV-M01 Mónica Arciniegas","Dirección":"USAQUÉN - Cedritos - Calle 140 # 13- 58 Apto 201 Torre 2","Teléfono":"3015629166","Día de Reunión":"Martes","Hora de Reunión":"07:00 PM","Encargados":"Mónica Del Pilar Arciniegas","Fecha Ultimo Reporte":"2026-09-29","Sede":"1","Cantidad Asistentes Directos":"8","Tipo Grupo":"CFV Mujeres"},
+      {"Nombre":"CFV-M02 Mónica Bernal","Dirección":"SUBA - Alhambra - Calle 114 A 47-35","Teléfono":"3164953932","Día de Reunión":"Miércoles","Hora de Reunión":"07:00 PM","Encargados":"Mónica Bernal","Fecha Ultimo Reporte":"2026-09-30","Sede":"1","Cantidad Asistentes Directos":"7","Tipo Grupo":"CFV Mujeres"},
+      {"Nombre":"CFV-K01 Sandra Reyes","Dirección":"SUBA - Prado Veraniego - Calle 128 B # 46 - 45","Teléfono":"3138871230","Día de Reunión":"Sábado","Hora de Reunión":"10:00 AM","Encargados":"Sandra Reyes","Fecha Ultimo Reporte":"2026-10-03","Sede":"1","Cantidad Asistentes Directos":"15","Tipo Grupo":"CFV Kids"},
+      {"Nombre":"CFV-J01 Santiago Sandoval","Dirección":"SUBA - Prado Veraniego - Cra 49 # 127D-59 Salón 201","Teléfono":"3107865412","Día de Reunión":"Sábado","Hora de Reunión":"04:00 PM","Encargados":"Santiago Sandoval","Fecha Ultimo Reporte":"2026-10-03","Sede":"1","Cantidad Asistentes Directos":"18","Tipo Grupo":"CFV Juvenil"},
+      {"Nombre":"CFV-PJ01 Angie Bernal","Dirección":"SUBA - Prado Veraniego - Cra 49 # 127D-59 Salón 202","Teléfono":"3124567890","Día de Reunión":"Sábado","Hora de Reunión":"03:00 PM","Encargados":"Angie Bernal","Fecha Ultimo Reporte":"2026-10-03","Sede":"1","Cantidad Asistentes Directos":"12","Tipo Grupo":"CFV Pre-Juvenil"},
+      {"Nombre":"CFV-P01 Carlos Salas","Dirección":"SUBA - San José de Banderas - Calle 160 # 62-10","Teléfono":"3159876543","Día de Reunión":"Viernes","Hora de Reunión":"07:30 PM","Encargados":"Carlos Salas , Angie Aldana","Fecha Ultimo Reporte":"2026-10-02","Sede":"1","Cantidad Asistentes Directos":"16","Tipo Grupo":"CFV Parejas"},
+      {"Nombre":"CFV-RP01 Laurieth Palomino","Dirección":"SUBA - Prado Veraniego - Cra 49 # 127D-59 Salón 203","Teléfono":"3176543210","Día de Reunión":"Jueves","Hora de Reunión":"07:00 PM","Encargados":"Laurieth Palomino","Fecha Ultimo Reporte":"2026-10-01","Sede":"1","Cantidad Asistentes Directos":"14","Tipo Grupo":"CFV Red Pro"}
     ];
 
-    // Variables de Estado
-    let baseDatosGlobal = [];
-    let resultadosVisibles = [];
-    let indiceSeleccionado = -1;
+    let rawData = [];
+    const STORAGE_KEY = 'cfv_directorio_db_v6';
 
-    // Inicializar la App y cargar localStorage si existe
-    function inicializar() {
-      const datosGuardados = localStorage.getItem("iglecam_bd_v1");
-      if (datosGuardados) {
-        baseDatosGlobal = JSON.parse(datosGuardados);
+    window.onload = function() {
+      cargarDatosAlmacenados();
+      revisarUrlPublica();
+      actualizarTodo();
+    };
+
+    function revisarUrlPublica() {
+      const params = new URLSearchParams(window.location.search);
+      const tiposParam = params.get('tipos');
+      const ordenParam = params.get('orden');
+      const vista = params.get('vista');
+
+      if (vista === 'publica') {
+        document.getElementById('adminPanel').classList.add('d-none');
+        document.getElementById('filterPanel').classList.add('d-none');
+        document.getElementById('headerSubtitle').innerText = "Directorio Oficial de Grupos Familiares";
+      }
+
+      if (tiposParam) {
+        const tiposSeleccionados = tiposParam.split(',').map(t => decodeURIComponent(t).trim().toLowerCase());
+        document.querySelectorAll('.chk-tipo').forEach(cb => {
+          cb.checked = tiposSeleccionados.includes(cb.value.trim().toLowerCase());
+        });
+      }
+
+      if (ordenParam) {
+        document.getElementById('selectOrden').value = ordenParam;
+      }
+    }
+
+    function cargarDatosAlmacenados() {
+      const guardado = localStorage.getItem(STORAGE_KEY);
+      const status = document.getElementById('statusMessage');
+
+      if (guardado) {
+        try {
+          rawData = JSON.parse(guardado);
+          if (status) {
+            status.className = "form-text mt-2 fw-semibold text-success";
+            status.innerText = `✓ Se cargaron ${rawData.length} grupos desde la memoria local.`;
+          }
+        } catch(e) {
+          rawData = datosIniciales;
+        }
       } else {
-        baseDatosGlobal = [...datosInicialesExcel];
-        guardarEnStorage();
-      }
-
-      actualizarResumenBD();
-      ejecutarFiltro();
-      lucide.createIcons();
-    }
-
-    function guardarEnStorage() {
-      localStorage.setItem("iglecam_bd_v1", JSON.stringify(baseDatosGlobal));
-      actualizarResumenBD();
-    }
-
-    function restablecerBD() {
-      if (confirm("¿Desea restablecer los datos originales de la tabla inicial?")) {
-        baseDatosGlobal = [...datosInicialesExcel];
-        guardarEnStorage();
-        ejecutarFiltro();
+        rawData = datosIniciales;
+        if (status) {
+          status.className = "form-text mt-2 fw-semibold text-success";
+          status.innerText = `✓ Base de datos por defecto cargada (${rawData.length} grupos).`;
+        }
       }
     }
 
-    function actualizarResumenBD() {
-      document.getElementById("badgeTotal").textContent = baseDatosGlobal.length;
-      document.getElementById("infoConteoBD").textContent = `Cargados ${baseDatosGlobal.length} miembros en el sistema`;
+    function procesarArchivo(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const fileName = file.name.toLowerCase();
+
+      if (fileName.endsWith('.csv')) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          try {
+            let buffer = evt.target.result;
+            let decoder = new TextDecoder('windows-1252');
+            let text = decoder.decode(buffer);
+
+            if (!text.includes('') && text.includes('Ã')) {
+              decoder = new TextDecoder('utf-8');
+              text = decoder.decode(buffer);
+            }
+
+            const parsedJson = parsearCSV(text);
+            if (parsedJson && parsedJson.length > 0) {
+              rawData = parsedJson;
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(rawData));
+              mostrarExitoCarga(rawData.length, file.name);
+            } else {
+              alert('El archivo CSV no contiene datos válidos.');
+            }
+          } catch(err) {
+            alert('Error al leer el archivo CSV.');
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      } else {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          try {
+            const data = new Uint8Array(evt.target.result);
+            const wb = XLSX.read(data, { type: 'array' });
+            const sheet = wb.Sheets[wb.SheetNames[0]];
+            const json = XLSX.utils.sheet_to_json(sheet, { defval: 'Sin Asignar' });
+
+            if (json && json.length > 0) {
+              rawData = json;
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(rawData));
+              mostrarExitoCarga(rawData.length, file.name);
+            } else {
+              alert('El archivo Excel no contiene registros válidos.');
+            }
+          } catch (err) {
+            alert('Error al procesar el archivo Excel.');
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      }
     }
 
-    // =========================================================================
-    // NORMALIZACIÓN DE TEXTO
-    // =========================================================================
-    function normalizarTexto(texto) {
-      if (texto === null || texto === undefined) return "";
-      return texto
-        .toString()
-        .trim()
+    function mostrarExitoCarga(cant, nombre) {
+      const status = document.getElementById('statusMessage');
+      status.className = "form-text mt-2 fw-semibold text-success";
+      status.innerText = `✓ ¡Éxito! Se cargaron ${cant} grupos desde "${nombre}".`;
+      actualizarTodo();
+    }
+
+    function parsearCSV(text) {
+      const lines = text.split(/\r\n|\n/).filter(line => line.trim() !== '');
+      if (lines.length < 2) return [];
+
+      const delim = lines[0].includes(';') ? ';' : ',';
+      const headers = lines[0].split(delim).map(h => h.replace(/^["']|["']$/g, '').trim());
+
+      const result = [];
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(delim).map(v => v.replace(/^["']|["']$/g, '').trim());
+        if (values.length === headers.length) {
+          const row = {};
+          headers.forEach((h, idx) => {
+            row[h] = values[idx] || 'Sin Asignar';
+          });
+          result.push(row);
+        }
+      }
+      return result;
+    }
+
+    function restablecerPredeterminados() {
+      if (confirm('¿Desea restablecer los datos a la versión inicial?')) {
+        localStorage.removeItem(STORAGE_KEY);
+        rawData = datosIniciales;
+        document.getElementById('excelFile').value = '';
+        const status = document.getElementById('statusMessage');
+        status.className = "form-text mt-2 fw-semibold text-success";
+        status.innerText = "✓ Datos restablecidos a la versión inicial.";
+        actualizarTodo();
+      }
+    }
+
+    function seleccionarTodos(estado) {
+      document.querySelectorAll('.chk-tipo').forEach(cb => cb.checked = estado);
+      actualizarTodo();
+    }
+
+    function actualizarTodo() {
+      const filtradosActuales = obtenerGruposFiltradosYOrdenados();
+      renderizarVistaPrevia(filtradosActuales);
+      generarUrlPublica();
+    }
+
+    function obtenerGruposFiltradosYOrdenados() {
+      const seleccionados = Array.from(document.querySelectorAll('.chk-tipo:checked'))
+                                 .map(cb => normalizar(cb.value));
+
+      if (rawData.length === 0 || seleccionados.length === 0) {
+        return [];
+      }
+
+      let filtrados = rawData.filter(item => {
+        const nombreVal = String(item['Nombre'] || '').trim();
+        const esNombreCFV = nombreVal.toUpperCase().startsWith('CFV-');
+        const tipoLimpio = normalizar(item['Tipo Grupo'] || '');
+        const esTipoSeleccionado = seleccionados.includes(tipoLimpio);
+
+        return esNombreCFV && esTipoSeleccionado;
+      });
+
+      const ordenVal = document.getElementById('selectOrden').value;
+      const mapaDias = { 
+        'lunes': 1, 'martes': 2, 'miercoles': 3, 'miércoles': 3, 
+        'jueves': 4, 'viernes': 5, 'sabado': 6, 'sábado': 6, 'domingo': 7 
+      };
+
+      filtrados.sort((a, b) => {
+        if (ordenVal === 'nombre') {
+          return String(a['Nombre'] || '').localeCompare(String(b['Nombre'] || ''), 'es', { sensitivity: 'base' });
+        } else if (ordenVal === 'direccion') {
+          return String(a['Dirección'] || a['Direccion'] || '').localeCompare(String(b['Dirección'] || b['Direccion'] || ''), 'es', { sensitivity: 'base' });
+        } else if (ordenVal === 'dia') {
+          const diaAStr = limpiaSignos(a['Día de Reunión'] || a['Dia de Reunion'] || '');
+          const diaBStr = limpiaSignos(b['Día de Reunión'] || b['Dia de Reunion'] || '');
+          
+          const dA = mapaDias[diaAStr] || 99;
+          const dB = mapaDias[diaBStr] || 99;
+
+          if (dA !== dB) {
+            return dA - dB;
+          }
+          return String(a['Nombre'] || '').localeCompare(String(b['Nombre'] || ''), 'es', { sensitivity: 'base' });
+        }
+        return 0;
+      });
+
+      return filtrados;
+    }
+
+    function renderizarVistaPrevia(filtrados) {
+      const container = document.getElementById('directoryContainer');
+      const counter = document.getElementById('recordCounter');
+
+      counter.innerText = `${filtrados.length} Grupos Encontrados`;
+
+      if (filtrados.length === 0) {
+        container.innerHTML = `
+          <div class="col-12 text-center py-5 text-warning">
+            <i class="bi bi-exclamation-triangle fs-1 d-block mb-2"></i>
+            <h5 class="fw-bold">No hay grupos seleccionados</h5>
+            <p class="small">Marque al menos un tipo de grupo arriba o cargue un archivo con registros válidos.</p>
+          </div>`;
+        return;
+      }
+
+      let html = '';
+      filtrados.forEach(item => {
+        const diaVal = item['Día de Reunión'] || item['Dia de Reunion'] || 'Sin Asignar';
+        const horaVal = item['Hora de Reunión'] || item['Hora de Reunion'] || 'Sin Asignar';
+
+        html += `
+          <div class="col-md-6 col-lg-4">
+            <div class="card card-custom group-card h-100 p-3 border-top border-4 border-primary">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <h5 class="fw-bold text-primary mb-0">${escapar(item['Nombre'] || 'Sin Nombre')}</h5>
+                <span class="badge badge-tipo text-white ms-2">${escapar(item['Tipo Grupo'] || '')}</span>
+              </div>
+              <hr class="my-2 text-muted">
+              <div class="small">
+                <p class="mb-1"><span class="info-label"><i class="bi bi-person-badge-fill text-info me-1"></i>Encargados:</span> ${escapar(item['Encargados'] || 'Sin Asignar')}</p>
+                <p class="mb-1"><span class="info-label"><i class="bi bi-calendar-event-fill text-primary me-1"></i>Día de Reunión:</span> ${escapar(diaVal)}</p>
+                <p class="mb-1"><span class="info-label"><i class="bi bi-clock-fill text-warning me-1"></i>Hora de Reunión:</span> ${escapar(horaVal)}</p>
+                <p class="mb-1"><span class="info-label"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Dirección:</span> ${escapar(item['Dirección'] || item['Direccion'] || 'Sin Asignar')}</p>
+                <p class="mb-1"><span class="info-label"><i class="bi bi-telephone-fill text-success me-1"></i>Teléfono:</span> ${escapar(item['Teléfono'] || item['Telefono'] || 'Sin Asignar')}</p>
+                <p class="mb-1"><span class="info-label"><i class="bi bi-building me-1"></i>Sede:</span> ${escapar(item['Sede'] || 'Sin Asignar')}</p>
+                <p class="mb-1"><span class="info-label"><i class="bi bi-people me-1"></i>Asistentes Directos:</span> ${escapar(item['Cantidad Asistentes Directos'] || '0')}</p>
+                <p class="mb-0"><span class="info-label"><i class="bi bi-journal-check me-1"></i>Último Reporte:</span> ${escapar(item['Fecha Ultimo Reporte'] || 'Sin Reporte')}</p>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function generarUrlPublica() {
+      const ordenVal = document.getElementById('selectOrden').value;
+      const base = window.location.origin + window.location.pathname;
+      const input = document.getElementById('publicLinkInput');
+
+      const seleccionados = Array.from(document.querySelectorAll('.chk-tipo:checked'))
+                                 .map(cb => encodeURIComponent(cb.value));
+
+      if (seleccionados.length > 0) {
+        input.value = `${base}?tipos=${seleccionados.join(',')}&orden=${ordenVal}&vista=publica`;
+      } else {
+        input.value = `${base}?orden=${ordenVal}&vista=publica`;
+      }
+    }
+
+    function copiarLinkPublico() {
+      const input = document.getElementById('publicLinkInput');
+      input.select();
+      navigator.clipboard.writeText(input.value).then(() => {
+        const copyAlert = document.getElementById('copyAlert');
+        copyAlert.classList.remove('d-none');
+        setTimeout(() => copyAlert.classList.add('d-none'), 2500);
+      });
+    }
+
+    function imprimirDirectorio() {
+      const filtrados = obtenerGruposFiltradosYOrdenados();
+
+      if (filtrados.length === 0) {
+        alert('No hay grupos en la vista previa para imprimir.');
+        return;
+      }
+
+      const area = document.getElementById('printArea');
+      area.innerHTML = '';
+
+      let printHtml = `
+        <div class="print-header">
+          <h2 style="margin:0; font-weight: bold; color: #1a365d; font-size: 13pt;">DIRECTORIO DE GRUPOS FAMILIARES CFV</h2>
+          <p style="margin:3px 0 0 0; font-size: 8.5pt; color: #4a5568;">Fecha de Informe: ${new Date().toLocaleDateString('es-CO')} | ${filtrados.length} Grupos Registrados</p>
+        </div>
+      `;
+
+      const tiposPresentes = [...new Set(filtrados.map(item => item['Tipo Grupo']))];
+
+      tiposPresentes.forEach((tipo, index) => {
+        const gruposTipo = filtrados.filter(g => g['Tipo Grupo'] === tipo);
+
+        if (gruposTipo.length > 0) {
+          if (index > 0) printHtml += `<div class="page-break"></div>`;
+
+          printHtml += `
+            <h3 style="color: #2b6cb0; border-bottom: 1px solid #2b6cb0; padding-bottom: 2px; margin-top: 8px; margin-bottom: 4px; font-size: 10.5pt; font-weight: bold;">
+              Categoría: ${tipo} (${gruposTipo.length} Grupos)
+            </h3>
+            <table class="table-print">
+              <thead>
+                <tr>
+                  <th style="width: 22%;">Nombre</th>
+                  <th style="width: 25%;">Encargados</th>
+                  <th style="width: 15%;">Día y Hora</th>
+                  <th style="width: 26%;">Dirección</th>
+                  <th style="width: 12%;">Teléfono</th>
+                </tr>
+              </thead>
+              <tbody>
+          `;
+
+          gruposTipo.forEach(g => {
+            const diaVal = g['Día de Reunión'] || g['Dia de Reunion'] || '';
+            const horaVal = g['Hora de Reunión'] || g['Hora de Reunion'] || '';
+
+            printHtml += `
+              <tr>
+                <td><strong>${escapar(g['Nombre'] || '')}</strong></td>
+                <td>${escapar(g['Encargados'] || 'Sin Asignar')}</td>
+                <td>${escapar(diaVal)}<br><small>${escapar(horaVal)}</small></td>
+                <td>${escapar(g['Dirección'] || g['Direccion'] || 'Sin Asignar')}</td>
+                <td>${escapar(g['Teléfono'] || g['Telefono'] || 'Sin Asignar')}</td>
+              </tr>
+            `;
+          });
+
+          printHtml += `</tbody></table>`;
+        }
+      });
+
+      area.innerHTML = printHtml;
+      setTimeout(() => { window.print(); }, 300);
+    }
+
+    function limpiaSignos(txt) {
+      return String(txt || '')
         .toLowerCase()
-        .normalize("NFD")                  // Separa vocales de sus diacríticos
-        .replace(/[\u0300-\u036f]/g, ""); // Elimina marcas de acentos
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim();
     }
 
-    // =========================================================================
-    // FILTRADO Y BÚSQUEDA
-    // =========================================================================
-    function alCambiarCriterio() {
-      const criterio = document.getElementById("selectCriterio").value;
-      const lbl = document.getElementById("lblBusqueda");
-      const input = document.getElementById("inputBusqueda");
-
-      switch(criterio) {
-        case "combinado":
-          lbl.textContent = "Escriba Nombre y/o Apellido (ej: Pedro Hernández):";
-          input.placeholder = "Ej: Pedro Rodriguez";
-          break;
-        case "identificacion":
-          lbl.textContent = "Escriba Número de Identificación:";
-          input.placeholder = "Ej: 1014227431";
-          break;
-        case "nombres":
-          lbl.textContent = "Escriba Nombres:";
-          input.placeholder = "Ej: Gian Carlos";
-          break;
-        case "apellidos":
-          lbl.textContent = "Escriba Apellidos:";
-          input.placeholder = "Ej: Rodríguez";
-          break;
-        case "telefono":
-          lbl.textContent = "Escriba Teléfono Móvil:";
-          input.placeholder = "Ej: 3002091933";
-          break;
-        case "iglesia":
-          lbl.textContent = "Escriba Nombre de la Iglesia:";
-          input.placeholder = "Ej: Igleco 127";
-          break;
-        case "ciudadIglesia":
-          lbl.textContent = "Escriba Ciudad de la Iglesia:";
-          input.placeholder = "Ej: Bogotá";
-          break;
-        case "direccionIglesia":
-          lbl.textContent = "Escriba Dirección de la Iglesia:";
-          input.placeholder = "Ej: Cra. 49";
-          break;
-      }
-      ejecutarFiltro();
+    function normalizar(txt) {
+      return String(txt || '').toLowerCase().replace(/[^a-z0-9]/g, '');
     }
 
-    function ejecutarFiltro() {
-      const criterio = document.getElementById("selectCriterio").value;
-      const busquedaLimpia = normalizarTexto(document.getElementById("inputBusqueda").value);
-
-      if (!busquedaLimpia) {
-        resultadosVis
+    function escapar(txt) {
+      return String(txt || '')
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
+</body>
+</html>
